@@ -1,0 +1,73 @@
+/* Function to compute maximum value in a 2d array
+ * Input : 
+ * arrayVal : 1d or 2d object
+ * type  : 1 for absolute maximum and 0 for true maximum
+ 
+ * Output :
+ * maxNum : Maximum number of the array
+*/ 
+ 
+function absMax(arrayVal,type) {
+    
+    // Check for correct number of arguments
+    if (arguments.length > 2 || arguments.length < 1) {
+        return NaN;
+    }
+    
+    // if array is of inappropriate type
+    if (Object.prototype.toString.call(arrayVal) == "[object Array]") {
+        return NaN;
+    }
+    
+    // Default maximum to be found
+    if (arguments.length == 1) {
+        type = 1;
+    }
+    
+    var maxNum = 0;
+    if (type == 1 && arrayVal[0].length != undefined) {
+        var numObjects = arrayVal.length;
+        for (var i = 0;i < numObjects;i++) {
+            var numElements = arrayVal[i].length;
+            for (var j = 0;j < numElements;j++) {
+                if (Math.abs(arrayVal[i][j]) > maxNum) maxNum = Math.abs(arrayVal[i][j]);
+            }
+        }
+    }
+    else if (type == 0 && arrayVal[0].length != undefined) {
+        var numObjects = arrayVal.length;
+        for (var i = 0;i < numObjects;i++) {
+            var numElements = arrayVal[i].length;
+            for (var j = 0;j < numElements;j++) {
+                if (arrayVal[i][j] > maxNum) maxNum = arrayVal[i][j];
+            }
+        }
+    }
+    
+    else if (type == 1 && arrayVal[0].length == undefined) {
+        var numElements = arrayVal.length;
+        for (var i = 0;i < numElements;i++) {
+                if (Math.abs(arrayVal[i]) > maxNum) maxNum = Math.abs(arrayVal[i]);
+            }
+    }
+    
+    else if (type == 0 && arrayVal[0].length == undefined) {
+        var numElements = arrayVal.length;
+        for (var i = 0;i < numElements;i++) {
+                if (arrayVal[i] > maxNum) maxNum = arrayVal[i];
+            }
+    }
+    
+    return maxNum;
+}
+        
+                
+            
+    
+    
+    
+    
+        
+    
+
+    
