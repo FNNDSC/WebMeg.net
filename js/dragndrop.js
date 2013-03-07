@@ -38,7 +38,7 @@ function handleDragOver(evt) {
 function on_drag_enter(evt) {
 	evt.stopPropagation();
 	evt.preventDefault();
-	this.style.opacity='0.8';
+	$('#drop_zone').css('opacity',0.8);
 }
 
 function handleNonDrop(evt) {
@@ -53,14 +53,14 @@ function on_drag_leave(evt) {
 	  // avoid further processing by the browser
 	  evt.stopPropagation();
 	  evt.preventDefault();
-	  this.style.opacity='0.4';
+	  $('#drop_zone').css('opacity',0.4)
 };
 
 /**
  * Callback whenever a file is released on the div
  */
 function on_drop(evt) {
-	this.style.opacity='0';
+	$('#drop_zone').css('opacity',0);
 	// avoid further processing by the browser
 	evt.stopPropagation();
 	evt.preventDefault();
