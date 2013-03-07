@@ -1,72 +1,89 @@
 /**
- * Initialize our dropzone.
+ * Initialize dropzone or manual selection.
  */
 function initialize_dragndrop() {
 
-  // drag enter and drag leave
-  document.body.addEventListener("dragenter", on_drag_enter, false);
-  document.body.addEventListener("dragleave", on_drag_leave, false);
-  document.getElementById('fileSelector').addEventListener('change', handleFileSelection, false); // Add an onchange event listener for the <input id="fileSelector"> element.
-  document.getElementById('eventSelector').addEventListener('change', loadEvents, false); // Add an onchange event listener for the <input id="fileSelector"> element.
-  
-  // on drop
-  document.body.addEventListener("drop", on_drop, false);
-  
-//on mousescroller
-  document.body.addEventListener("mousewheel", mousescroll, false);
-  
+	// drag enter and drag leave
+	var dropZone = document.getElementById('drop_zone');
+	dropZone.addEventListener('dragover', handleDragOver, false);
+	dropZone.addEventListener('drop', on_drop, false);
+	dropZone.addEventListener('dragleave', on_drag_leave, false);
+	dropZone.addEventListener('dragenter', on_drag_enter, false);
+	
+	var nondropZone = document.getElementById('nondrop_zone');
+	nondropZone.addEventListener('dragover', handleNonDrop, false);
+	
+	// Select file manually
+	document.getElementById('fileSelector').addEventListener('change', handleFileSelection, false);
+	
+	// Select event file
+	document.getElementById('eventSelector').addEventListener('change', loadEvents, false); 
+	//on mousescroller
+	document.body.addEventListener("mousewheel", mousescroll, false);
 };
 
 /**
- * Callback whenever a file is pulled into the browser window.
- */
-function on_drag_enter() {
+ * Callback whenever a file is moved into the div
+ */ 
+function handleDragOver(evt) {
+	evt.stopPropagation();
+	evt.preventDefault();
+	this.style.opacity='0.8';
+	evt.dataTransfer.dropEffect = 'copy';
+}
 
-  var _dropzone = document.getElementById('dropzone');
-  _dropzone.style.display = 'block';
-  
+/**
+ * Callback whenever a file is moved into the div
+ */ 
+function on_drag_enter(evt) {
+	evt.stopPropagation();
+	evt.preventDefault();
+	this.style.opacity='0.8';
+}
+
+function handleNonDrop(evt) {
+	evt.stopPropagation();
+	evt.preventDefault();
+	evt.dataTransfer.dropEffect = 'none';
+}
+/**
+ * Callback whenever a file is moved out of the div
+ */
+function on_drag_leave(evt) {
+	  // avoid further processing by the browser
+	  evt.stopPropagation();
+	  evt.preventDefault();
+	  this.style.opacity='0.4';
 };
 
 /**
- * Callback whenever a file is moved out of the browser window.
+ * Callback whenever a file is released on the div
  */
-function on_drag_leave() {
+function on_drop(evt) {
+	this.style.opacity='0';
+	// avoid further processing by the browser
+	evt.stopPropagation();
+	evt.preventDefault();
 
-  var _dropzone = document.getElementById('dropzone');
-  _dropzone.style.display = 'none';
-  
-};
+	// grab the file list
+	var _filelist = evt.dataTransfer.files;  
 
-/**
- * Callback whenever a file is released over the browser window.
- */
-function on_drop(event) {
+	// Return if user dragged more than one file 
+	if (_filelist.length != 1) {
+		console.log('Drag only one file please');
+		return;
+	}
 
-  // avoid further processing by the browser
-  event.stopPropagation();
-  event.preventDefault();
-  
-  // grab the file list
-  var _filelist = event.dataTransfer.files;  
-  // hide the box
-  on_drag_leave();
-  
-  // Return if user dragged more than one file 
-  if (_filelist.length != 1) {
-      console.log('Drag only one file please');
-      return;
-  }
-        
-  load_files(_filelist);
+	load_files(_filelist);
 };
 
 function mousescroll(event) {
 	if (event.wheelDelta < 0) {
-	//plotData();
+		//plotData();
 	}
 	else {
 		//plotData();
-    }
+	}
 }
 
 function handleFileSelection(evt) {    

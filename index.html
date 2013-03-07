@@ -19,6 +19,7 @@
 <script type="text/javascript" src="js/displayOperations.js"></script>
 <script type="text/javascript" src="js/menu/jquery.js"></script>
 <script type="text/javascript" src="js/jquery.flot.js"></script>
+<script type="text/javascript" src="js/heatmap.js"></script>
 <script type="text/javascript" src="js/menu/menu.js"></script>
 <link rel="stylesheet" type="text/css" href="css/style.css"/>
 <link type="text/css" href="css/menu.css" rel="stylesheet" />
@@ -155,7 +156,7 @@ else {
 </script>
 
 <script type="text/javascript">
-
+// Update tracking information of the website
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-39084119-1']);
   _gaq.push(['_trackPageview']);
@@ -172,7 +173,8 @@ else {
 
 <body>
 <!-- The dropzone -->
-<div id='dropzone' style='display:none'>Drop the file anywhere!</div>
+<div id="drop_zone">Drop the MEG\EEG file here to display or from File menu</div>
+<div id="nondrop_zone"></div>
 <div id="container" style="height: 1px; min-width: 1px"></div>
 </body>
 
