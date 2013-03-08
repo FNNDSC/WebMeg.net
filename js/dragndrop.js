@@ -60,7 +60,6 @@ function on_drag_leave(evt) {
  * Callback whenever a file is released on the div
  */
 function on_drop(evt) {
-	$('#drop_zone').css('opacity',0);
 	// avoid further processing by the browser
 	evt.stopPropagation();
 	evt.preventDefault();
@@ -139,12 +138,14 @@ window.onkeydown = function(e) {
         else {
         	for (var i = 0;i < MEGFIFF.userSelection.length;i++) {
         		MEGFIFF.visible[MEGFIFF.userSelection[i]] = false;
+        		MEGFIFF.badChannels[MEGFIFF.userSelection[i]] = 1;
         	}
         	MEGFIFF.scale = 1;
         	chart.destroy();
         	plotData_highChart(MEG_data1);
         }
     }
+    
     if (e.keyCode == 39) { // Right key
     	var disLen = MEGFIFF.displayDuration;
     	if (MEGFIFF.endPlotTime + disLen < MEGFIFF.dataLength) {

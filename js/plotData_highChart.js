@@ -34,6 +34,7 @@ function plotData_highChart (values) {
                 chart.container.firstChild.appendChild(cloneToolTip);
                 // Get the time on the cursor
                 MEGFIFF.currentTime = parseFloat(cloneToolTip.getElementsByTagName('tspan')[0].childNodes[0].data.match("[0-9.-]+"));
+                if (MEGFIFF.dispTopo) topoPlot();
             }
 	
         },

@@ -1,6 +1,5 @@
 function load_files(filelist) {
 $('#drop_zone').css('opacity',0);
-$('#drop_zone').css('z-index',-1);
 	// call the load function with the file list
 	var _number_of_files = filelist.length;
 	for ( var i = 0; i < _number_of_files; i++) {

@@ -10,6 +10,10 @@ function chartInitialize(numChannels, sfreq, chNames) {
 	MEGFIFF.dataLength = finalData[0].length/sfreq;
 	MEGFIFF.numBadChannels = [];
 	MEGFIFF.badChannels = [];
+	for (var i = 0;i < chNames.length;i++){
+		MEGFIFF.badChannels[i] = 0
+	}
+	
 	MEGFIFF.chNames = chNames;
 	MEGFIFF.firstGood = []; // Index of first good channel
 	MEGFIFF.userSelection = []; // Stores series selected by the user
@@ -46,4 +50,5 @@ function chartInitialize(numChannels, sfreq, chNames) {
 	MEGFIFF.HP = [];
 	MEGFIFF.BP = [];
 	MEGFIFF.BR = [];
+	MEGFIFF.dispTopo = false;
 }

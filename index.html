@@ -74,7 +74,7 @@ div#menu { margin:1px auto; }
                 <li><a href="#"><span>Plot type</span></a></li>
                 <li><a href="#"><span onclick="javascript:changeDuration()">Display duration</span></a></li>
                 <li><a href="#"><span onclick="javascript:avgParams()">Average data</span></a></li>
-                <li><a href="#"><span onclick="javascript:topoPlot()">Plot Topography</span></a></li>
+                <li><a href="#"><span onclick="javascript:topoPlotInitialize()">Plot Topography</span></a></li>
             </ul>
         </li>
         <li><a href="#" class="parent"><span onclick="javascript:fltData()">Filter</span></a>
@@ -95,7 +95,8 @@ div#menu { margin:1px auto; }
 </div>
 
 <div id="topoDlg" title="Topography" style="font-size:10pt" size="10">
-	<canvas id="canvas" width="750" height="750"></canvas>
+	<canvas id="canvas1" width="500" height=450" z-index="-1"></canvas>
+	<div id="heatmapArea" z-index="1"></div>
 </div>
 
 
@@ -140,7 +141,7 @@ div#menu { margin:1px auto; }
 window.onload = function() {
 $('div#avgDialog').dialog({ autoOpen: false })
 $('div#fltDlg').dialog({autoOpen : false,width : 800, height : 700})
-$('div#topoDlg').dialog({autoOpen : false,width : 800, height : 700})
+$('div#topoDlg').dialog({autoOpen : false,width : 500, height : 500,close: function() {MEGFIFF.dispTopo = false}})
 if (localStorage.avg) {
 	plotData_highChart(MEG_data1);
 	localStorage.removeItem('avg');
@@ -173,7 +174,7 @@ else {
 
 <body>
 <!-- The dropzone -->
-<div id="drop_zone">Drop the MEG\EEG file here to display or from File menu</div>
+<div id="drop_zone">Drop the MEG\EEG file here to display or select from the file menu</div>
 <div id="nondrop_zone"></div>
 <div id="container" style="height: 1px; min-width: 1px"></div>
 </body>
