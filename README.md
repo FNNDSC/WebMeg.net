@@ -14,22 +14,22 @@ Download : <b><a href="https://www.dropbox.com/sh/d5sr68bsedgvtwi/z2g1JIh1Y8">Dr
 
 * Once data is rendered, there are multiple ways to interact with the data.
 
-      +--------------------------+---------------------------------------------+
-      |     Keyboard shortcut    |                   Function                  |
-      +--------------------------+---------------------------------------------+
-      | Left\Right arrow         | Scroll back\forward                         |
-      | Page Up\Down             | Scroll back and forward by 10s (changeable) |
-      | Up\Down arrow            | Increase\decrease amplitude                 |
-      | Ctrl + R                 | Add event type                              |
-      | Ctrl + E                 | Add event for current type                  |
-      | Ctrl + D                 | Delete current event                        |
-      | Ctrl + F                 | Delete entire event type                    |
-      | Delete                   | Delete selected channels (channels in red)  |
-      | Ctrl + S                 | Save events                                 |
-      | Ctrl + L                 | Load events                                 |
-      | Ctrl + B                 | Plot channels in butterfly mode             |
-      | Ctrl + C                 | Plot channels in line mode                  |
-      +--------------------------+---------------------------------------------+
+         +--------------------------+---------------------------------------------+
+         |     Keyboard shortcut    |                   Function                  |
+         +--------------------------+---------------------------------------------+
+         | Left\Right arrow         | Scroll back\forward                         |
+         | Page Up\Down             | Scroll back and forward by 10s (changeable) |
+         | Up\Down arrow            | Increase\decrease amplitude                 |
+         | Ctrl + R                 | Add event type                              |
+         | Ctrl + E                 | Add event for current type                  |
+         | Ctrl + D                 | Delete current event                        |
+         | Ctrl + F                 | Delete entire event type                    |
+         | Delete                   | Delete selected channels (channels in red)  |
+         | Ctrl + S                 | Save events                                 |
+         | Ctrl + L                 | Load events                                 |
+         | Ctrl + B                 | Plot channels in butterfly mode             |
+         | Ctrl + C                 | Plot channels in line mode                  |
+         +--------------------------+---------------------------------------------+
 
 
 * There is also a menu bar that performs the same function as many of the keyboard shortcuts
@@ -39,3 +39,4 @@ Download : <b><a href="https://www.dropbox.com/sh/d5sr68bsedgvtwi/z2g1JIh1Y8">Dr
 We encourage you to provide feedback in order to improve your future experience. 
 
 Also if you would like to see certain features or integrate your own cool features or formats, please <a href="mailto:chiran.doshi@childrens.harvard.edu">email us</a>.
+
