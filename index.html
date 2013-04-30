@@ -65,7 +65,11 @@ div#menu { margin:1px auto; }
         </li>
         <li id="eventAddGroup"><a href="#" class="parent"><span>Add Events</span></a>
             <ul>
-            	<li><a href="#"><span onclick="javascript:addEventGroup(this)">Create New Event Type</span></a></li>
+            	<li><a href="#"><span onclick="javascript:addEventGroup(this)">Create Event Group</span></a></li>
+            	<li><a href="#"><span onclick="javascript:addEvent()">Mark New Event <p style="text-align:right;float:right">  Ctrl + e </p> </span></a></li>
+            	<li><a href="#"><span onclick="javascript:deleteEventGroup()">Delete Group <p style="text-align:right;float:right"> Ctrl + f </p> </span></a></li>
+            	<li><a href="#"><span onclick="javascript:deleteEvent()">Delete Event <p style="text-align:right;float:right"> Ctrl + d </p></span></a></li>
+            	<li><a href="#"><span onclick="javascript:setTrgParam()">Detect from trigger line </span></a></li>
             </ul>
         </li>
         
@@ -97,6 +101,17 @@ div#menu { margin:1px auto; }
 <div id="topoDlg" title="Topography" style="font-size:10pt" size="10">
 	<canvas id="canvas1" width="500" height=450" z-index="-1"></canvas>
 	<div id="heatmapArea" z-index="1"></div>
+</div>
+
+<div id="evtDlg" title="Detect Events from Trigger Line" style="font-size:10pt" size="10">
+	<p><label>Trigger Line 1 : </label><input type="checkbox" name="trg1"> <select id = "chList1"></select></p>
+	<br/>
+	<p><label>Trigger Line 2 : </label><input type="checkbox" name="trg2"> <select id = "chList2"></select></p>
+	<br/>
+    <p><label for="thres">Threshold: </label> <input type="text" name="thresVal" size="5" value="10"></p>
+    <br/>
+    <p><center><button id="evtSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="javascript:evtDetect()">Ok</button></center></p>
+    <br/>
 </div>
 
 
@@ -142,7 +157,11 @@ window.onload = function() {
 $('div#avgDialog').dialog({ autoOpen: false })
 $('div#fltDlg').dialog({autoOpen : false,width : 800, height : 700})
 $('div#topoDlg').dialog({autoOpen : false,width : 500, height : 500,close: function() {MEGFIFF.dispTopo = false}})
+$('div#evtDlg').dialog({autoOpen : false,width : 232, height : 195,open: function (event, ui) {$('#evtDlg').css('overflow', 'hidden');}})
+
 if (localStorage.avg) {
+	$('#drop_zone').css('opacity',0);
+	$('#drop_zone').css('z-index',-1);
 	plotData_highChart(MEG_data1);
 	localStorage.removeItem('avg');
 }

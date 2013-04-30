@@ -51,4 +51,5 @@ function chartInitialize(numChannels, sfreq, chNames) {
 	MEGFIFF.BP = [];
 	MEGFIFF.BR = [];
 	MEGFIFF.dispTopo = false;
+	MEGFIFF.numTopoPoints = 5;
 }

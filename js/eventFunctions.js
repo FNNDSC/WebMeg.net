@@ -30,10 +30,10 @@ function addEvent() {
 	
 	// Add unordered list if there is no event for that type else just add event
 	if (MEGFIFF.eventTimes[currentGroupIndex].length == 0) {
-		$("#" + MEGFIFF.currentEventGroup).append('<ul><li id = "' + MEGFIFF.currentEventGroup   + '_' + MEGFIFF.eventIdGroup[currentGroupIndex] + '" style="background-color:#8A2EB2;width:159px;left:0;height:28px" onclick="javascript:selectEvent(this.id)"><a href="#"><span style="color:#a9a9a9;">' + MEGFIFF.currentTime + 's' + '</span></a></li></ul>')
+		$("#" + MEGFIFF.currentEventGroup).append('<ul style="width:100px;padding"><li id = "' + MEGFIFF.currentEventGroup   + '_' + MEGFIFF.eventIdGroup[currentGroupIndex] + '" style="background-color:#8A2EB2;width:100px;left:0;height:28px" onclick="javascript:selectEvent(this.id)"><a href="#"><span style="color:#a9a9a9;">' + MEGFIFF.currentTime + 's' + '</span></a></li></ul>')
 	}
 	else {
-		$("#" + MEGFIFF.currentEventGroup + " li:eq(" + (MEGFIFF.eventTimes[currentGroupIndex].length - 1) + ")").after('<li id = "' + MEGFIFF.currentEventGroup + '_' + MEGFIFF.eventIdGroup[currentGroupIndex] + '" style="background-color:#8A2EB2;width:159px;left:0;height:28px" onclick="javascript:selectEvent(this.id)"><a href="#"><span style="color:#a9a9a9;">' + MEGFIFF.currentTime + 's' + '</span></a></li>')	
+		$("#" + MEGFIFF.currentEventGroup + " li:eq(" + (MEGFIFF.eventTimes[currentGroupIndex].length - 1) + ")").after('<li id = "' + MEGFIFF.currentEventGroup + '_' + MEGFIFF.eventIdGroup[currentGroupIndex] + '" style="background-color:#8A2EB2;width:100px;left:0;height:28px" onclick="javascript:selectEvent(this.id)"><a href="#"><span style="color:#a9a9a9;">' + MEGFIFF.currentTime + 's' + '</span></a></li>')	
 	}
 	MEGFIFF.eventTimes[currentGroupIndex][MEGFIFF.eventTimes[currentGroupIndex].length] = MEGFIFF.currentTime;
 	MEGFIFF.currentEvent = MEGFIFF.currentEventGroup + '_' + MEGFIFF.eventIdGroup[currentGroupIndex];
@@ -112,7 +112,7 @@ function addEventGroup(e, addGroup) {
 	}
 	var numLi = $("#eventAddGroup li").length;
 	// Add event type to the list
-	$("#eventAddGroup > ul").append('<li id = "' + addGroup + '" style="background-color:#8A2EB2;width:159px;left:0;height:28px" onclick="javascript:selectGroup(this.id)"><a href="#"><span style="color:#a9a9a9;">' + addGroup + '</span></a></li>')
+	$("#eventAddGroup > ul").append('<li id = "' + addGroup + '" style="background-color:#8A2EB2;width:180px;left:0;height:28px" onclick="javascript:selectGroup(this.id)"><a href="#"><span style="color:#a9a9a9;">' + addGroup + '</span></a></li>')
 	
 	// Update event information
 	MEGFIFF.numEvent++;
@@ -285,3 +285,79 @@ function selectGroup(evt) {
 		}
 	return
 }
+
+function addLoadEvents(strData,strDelimiter) {
+	// Check if the any data is loaded
+		try {
+			MEGFIFF;
+		}
+		catch (err) {
+			alert('Please load the file first');
+			return;
+		}
+		if (strData.length == 0) {
+			alert('Empty file!! Please load file containing events');
+			return;
+		}
+		var indexLine, lineString, count = 0, indexTab, evtName ;
+		
+		do {
+			count++;
+			indexLine = strData.indexOf('\n');
+			lineString = strData.substr(0,indexLine);
+			if (count == 1) {
+				sfreq = parseFloat(lineString.match(/\d+\.?\d*/g));
+				if (sfreq != MEGFIFF.sfreq) {
+					alert('Loaded events do not belong to the data due to differing Sampling rates');
+					return;
+				}
+			}
+			else {
+				indexTab = strData.indexOf('\t');
+				addGroup= strData.substr(0,indexTab);
+				if (!(addGroup == "" || addGroup.match(/^[0-9a-zA-Z]+$/) == null))  {
+					addEventGroup('',addGroup)
+					MEGFIFF.currentTime = parseFloat(lineString.substr(indexTab+1,indexLine).match(/\d+\.?\d*/g));
+					addEvent();
+				}
+				
+			}
+			strData = strData.substr(indexLine+1, strData.length);
+		} while (indexLine != -1)
+    }
+
+
+function setTrgParam() {
+	//var check = checkData(); if (check == 0) return;
+	$('div#evtDlg').dialog('open');
+	 var opt,op1;
+	for (var i = 0;i < MEGFIFF.allChs.length;i++) {
+		opt = document.createElement("option");
+		opt1 = document.createElement("option");
+		document.getElementById("chList1").options.add(opt);
+		opt.text = MEGFIFF.allChs[i];
+		document.getElementById("chList2").options.add(opt1);
+		opt1.text = MEGFIFF.allChs[i];
+	}
+	var trg1;
+	if (document.getElementsByName('trg1')[0].checked) {
+		trg1_t = detectEdge(finalData(MEGFIFF.allChs.indexOf(document.getElementById('chList1').value)));
+	}
+	var trg2;
+	if (document.getElementsByName('trg2')[0].checked) {
+		trg2_t = detectEdge(finalData(MEGFIFF.allChs.indexOf(document.getElementById('chList2').value)));
+	}
+}
+
+function detectEdge(sig) {
+	
+}
+
+function calParams() {
+/*	var r = {mean: 0, variance: 0, deviation: 0}, var t = a.length;
+	for(var m, s = 0, l = t; l--; s += a[l]);
+	for(m = r.mean = s / t, l = t, s = 0; l--; s += Math.pow(a[l] - m, 2));
+	r.deviation = Math.sqrt(r.variance = s / (t - 1))
+	return r;*/
+}
+

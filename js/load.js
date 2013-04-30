@@ -58,6 +58,10 @@ var loadHandler = function(file) {
 		// Initialize plotting parameters
 		chartInitialize(74, data_info.info.sfreq,chs);
 		// Slice data to the required data to be plotted
+		MEGFIFF.allChs = [];
+		for (var i = 0;i < data_info.info.chs.length;i++) {
+			MEGFIFF.allChs[i] = data_info.info.chs[i].ch_name;
+		}
 		MEGFIFF.plotType = 'raster';
 		MEG_data = finalData.slice(0,MEGFIFF.numChannels);
 		MEG_data1 = dataSlicing(MEG_data,MEGFIFF.startPlotTime,MEGFIFF.endPlotTime,MEGFIFF.sfreq);
@@ -68,10 +72,22 @@ var loadHandler = function(file) {
 		MEG_data1 = displayOperations();
 		// Plot the data
 		plotData_highChart(MEG_data1);
+		
+		MEGFIFF.chanLocs = [];
+		for (var i = 0;i < MEGFIFF.chNames.length;i++) {
+			MEGFIFF.chanLocs.push(new Array());
+			MEGFIFF.chanLocs[i][0] = data_info.info.chs[i].loc[0];
+			MEGFIFF.chanLocs[i][1] = data_info.info.chs[i].loc[1];
+			MEGFIFF.chanLocs[i][2] = data_info.info.chs[i].loc[2];
 		}
+	}
 		
 		else if(MEGFIFF.fileType == 'edf') {
 			chartInitialize(data_info.ns, data_info.samples[0],data_info.label);
+			MEGFIFF.allChs = [];
+			for (var i = 0;i < data_info.label.length;i++) {
+				MEGFIFF.allChs[i] = data_info.label[i];
+			}
 			MEGFIFF.scale = 1;
 			MEGFIFF.finalScale = MEGFIFF.scale;
 			seriesPlot();

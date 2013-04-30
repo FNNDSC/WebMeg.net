@@ -35,7 +35,7 @@ function startAvg() {
 	MEGFIFF.poststim = poststim;
 	$('div#avgDialog').dialog('close');
 	localStorage.avg = 1;
-	avgWindow = window.open('http://chris/c/html5dragndrop/','avgWindow',"height=600,width=1200");
+	avgWindow = window.open(window.location.href,'avgWindow',"height=600,width=1200");
 	var numSam = Math.round(((poststim - prestim) * MEGFIFF.sfreq));
 	var indexEvent = MEGFIFF.eventNames.indexOf(MEGFIFF.currentEventGroup);
 	MEG_data = finalData.slice(0,MEGFIFF.numChannels);
@@ -67,6 +67,8 @@ function startAvg() {
 	//avgWindow.MEGFIFF.fileName = 'D3_responses'
 	avgWindow.MEGFIFF.startPlotTime = prestim;
 	avgWindow.MEGFIFF.endPlotTime = poststim;
+	avgWindow.MEGFIFF.fileName = 'Avg_' + MEGFIFF.currentEventGroup;
+	//avgWindow.MEGFIFF.dataLength = (poststim - prestim) * 1000;
 	avgWindow.MEGFIFF.displayDuration = poststim - prestim;
 	avgWindow.plotData_highChart = clone(window.plotData_highChart);
 	avgWindow.MEGFIFF.plotType = 'butterfly';

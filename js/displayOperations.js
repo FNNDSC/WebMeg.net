@@ -76,6 +76,11 @@ function butterflyPlot() {
 	MEGFIFF.maxRaster = chart.yAxis[0].max;
 }
 
+function defineButter() {
+	MEGFIFF.minRaster = chart.yAxis[0].min;
+	MEGFIFF.maxRaster = chart.yAxis[0].max;
+}
+
 // Function to swtich the display to raster plot
 function seriesPlot() {
 	MEGFIFF.plotType = 'raster';
@@ -446,5 +451,27 @@ function clearTopo () {
 	ctx2.clearRect(0,0,500,500);
 }
 
+function interp2d(Pts,jmP) {
+	var distJmp = [];
+	var interpPts = [];
+	var index = 0;
+	var m = [];
+	var c = [];
+	for (var i = 0;i < Pts.length;i++){
+		for (var j = i+1;j < Pts.length;j++){
+			
+			distJmp =  (Pts[i][0] - Pts[j][0])/jmP;
+			m = (Pts[j][1] - Pts[i][1])/(Pts[j][0] - Pts[i][0]);
+			c =  Pts[j][1] - m * Pts[j][0];
+			for (var k = 1;k < jmP;k++){
+			    interpPts.push(new Array());
+				interpPts[index][0] = Pts[j][0] + distJmp * k;
+				interpPts[index][1] = m * interpPts[index][0] + c;
+				index++;
+			}
+		}
+	}
+	return interpPts;
+}
 
 		

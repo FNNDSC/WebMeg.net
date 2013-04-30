@@ -69,7 +69,7 @@ function on_drop(evt) {
 
 	// Return if user dragged more than one file 
 	if (_filelist.length != 1) {
-		console.log('Drag only one file please');
+		alert('Drag only one file please');
 		return;
 	}
 
@@ -108,6 +108,7 @@ window.onkeydown = function(e) {
     		MEG_data1 = rasterPlot(MEG_data1);
     	}
     	else {
+    		if (MEGFIFF.minRaster == undefined) defineButter();
     		var temp = Math.abs((MEGFIFF.minRaster < MEGFIFF.maxRaster)?MEGFIFF.minRaster:MEGFIFF.maxRaster);
     		MEGFIFF.minRaster = MEGFIFF.minRaster - 0.2 * temp;
     		MEGFIFF.maxRaster = MEGFIFF.maxRaster + 0.2 * temp;
@@ -123,6 +124,7 @@ window.onkeydown = function(e) {
     		MEG_data1 = rasterPlot(MEG_data1);
     	}
     	else {
+    		if (MEGFIFF.minRaster == undefined) defineButter();
     		var temp = Math.abs((MEGFIFF.minRaster < MEGFIFF.maxRaster)?MEGFIFF.minRaster:MEGFIFF.maxRaster);
     		MEGFIFF.minRaster = MEGFIFF.minRaster + 0.2 * temp;
     		MEGFIFF.maxRaster = MEGFIFF.maxRaster - 0.2 * temp;
@@ -235,7 +237,7 @@ window.onkeydown = function(e) {
     }
     
     
-    if (e.which == 82 && e.ctrlKey) { // Press Crtl + R for adding Event type
+    if (e.which == 82 && e.ctrlKey) { // Press Crtl + r for adding Event type
     	e.preventDefault();
     	addEventGroup(e);
     }
