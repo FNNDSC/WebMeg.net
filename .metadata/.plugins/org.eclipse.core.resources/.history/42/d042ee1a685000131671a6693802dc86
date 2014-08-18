@@ -1,0 +1,569 @@
+/* Function to plot the data using highcharts
+ */
+
+function plotData_highChart(values) {	
+	var MF=MEGFIFF;
+	if (MF.plotType == 'butterfly') {
+		plotData_highChartButter(values);
+		return;
+	}
+	
+	var line, cloneToolTip;
+	MF.currentTime=[];
+	// Create the chart
+	chart=new Highcharts.StockChart({
+		chart:{
+			animation:false,
+			reflow:true,
+			renderTo:'container',
+			events:{
+				redraw:function() {
+					if (cloneToolTip) document.getElementsByClassName('highcharts-tooltip')[1].setAttribute('opacity',0);
+					MF.startPlot=chart.xAxis[0].getExtremes().min;
+					MF.endPlot=chart.xAxis[0].getExtremes().max;
+					MF.disWid=MF.endPlot - MF.startPlot; 
+				},
+				// Function that creates a crosshair and tooltip onclick
+				click:function() {
+					if (line) line.destroy(); // Destroy if a line exists
+					// Create a line
+					line=this.renderer.path(this.tooltip.crosshairs[0].d.split(" ")).attr({
+						'stroke-width':2,
+						 stroke:'red'
+					}).add();
+
+					if (cloneToolTip) chart.container.firstChild.removeChild(cloneToolTip); // Destroy if toolTip exists
+					cloneToolTip=chart.tooltip.label.element.cloneNode(true); // Create a tooltip
+					chart.container.firstChild.appendChild(cloneToolTip);
+					// Get the time on the cursor
+					MF.currentTime=parseFloat(cloneToolTip.getElementsByTagName('tspan')[0].childNodes[0].data.match("[0-9.-]+"));
+					if (MF.dispTopo) topoPlot();
+				}
+
+		},
+		width:MF.width, // Chart Width
+		height:MF.height, // Chart Height
+		spacingLeft:50, // Space between left margin and the data
+		borderColor:'#EBBA95', // Color of border around chart
+		borderWidth:3, // Width of corder
+		borderRadius:10, // Radius of the corner
+		zoomType:'xy', // Zoom in both X and Y	
+		},
+
+		scrollbar:{
+			enabled:true,
+			liveRedraw:false,
+			barBackgroundColor:'gray',
+			barBorderRadius:7,
+			barBorderWidth:0,
+			buttonBackgroundColor:'gray',
+			buttonBorderWidth:0,
+			buttonBorderRadius:7,
+			trackBackgroundColor:'white',
+			trackBorderWidth:1,
+			trackBorderRadius:8,
+			trackBorderColor:'#CCC',
+			rifleColor:'yellow',
+			buttonArrowColor:'yellow',
+		},
+
+		plotOptions:{
+			series:{
+				animation:false,
+				cursor:'pointer',
+				point:{
+					events:{
+						// Function that highlights the color of series On click
+						click:function() {
+							if (this.series.color=='#1E90FF') { // Blue
+								MF.userSelection.push(MF.chNames[this.series.index]);
+								this.series.color="#FF0000"; // Red
+								MF.colors[this.series.index]="#FF0000"; 
+								this.series.graph.attr({ stroke:'#FF0000' });
+							}
+							else {
+								this.series.color="#1E90FF";
+								MF.colors[this.series.index]="#1E90FF";
+								this.series.graph.attr({ stroke:'#1E90FF' });
+								MF.userSelection.splice(MF.userSelection.indexOf(this.series.index),1);
+							}
+						}
+					}
+				},
+			}
+		},
+	
+		navigator:{
+			series:{
+			type: 'areaspline',
+			color: '#4572A7',
+			fillOpacity: 0.4,
+			dataGrouping: {
+				smoothed: true
+			},
+			lineWidth: 1,
+			marker: {
+				enabled: false
+			},
+			shadow: false,
+				color:'green',
+				//data:MF.GFP, 
+			},
+			outlineWidth:2,
+			handles:{
+				backgroundColor:'yellow',
+				borderColor:'red'
+			},
+			maskFill:'rgba(180, 198, 220, 0)',
+			xAxis:{
+				tickPositioner:function(min, max) {
+					var pos=0,tickPositions=[],tickEnd=values[0].length,sfreq=MF.sfreq,jmp=sfreq*10;
+					for (pos=0; pos<=tickEnd;pos=pos+jmp) {
+						if(pos>min) tickPositions.push(pos);
+					}
+					return tickPositions;
+				},
+
+				tickWidth:3,
+				tickPosition:'inside',
+				labels:{
+					formatter:function() {	    		
+						return (this.value/MF.sfreq).toFixed(1);
+					}
+				},
+				gridLineWidth:2
+			},
+		},
+
+	rangeSelector:{
+		buttonTheme:{ // styles for the buttons
+			fill:'none',
+			stroke:'none',
+			'stroke-width':0,
+			r:8,
+			style:{
+				color:'#039',
+				fontWeight:'bold'
+			},
+			states:{
+				select:{
+					fill:'#039',
+					style:{
+						color:'white'
+					}
+				}
+			}
+		},
+		buttons:[{
+			type:'second',
+			count:5*MF.sfreq/1000,
+			text:'5s'
+		}, {
+			type:'second',
+			count:10*MF.sfreq/1000,
+			text:'10s'
+		}, {
+			type:'second',
+			count:30*MF.sfreq/1000,
+			text:'30s'
+		}, {
+			type:'second',
+			count:60*MF.sfreq/1000,
+			text:'1m'
+		}],
+		inputStyle:{
+			color:'#039',
+			fontWeight:'bold'
+		},
+		labelStyle:{
+			color:'silver',
+			fontWeight:'bold'
+		},
+		selected:1,
+		inputEnabled:false
+		},
+
+		title:{
+			text:'File name:'+MF.fileName+'; Total Length:'+Math.round(MF.dataLength)+' sec'+'; Sampling rate:'+MF.sfreq+' Hz'
+		},
+
+	xAxis:{
+		tickPositioner:function (min, max) {
+			var pos=0;
+			tickPositions=[],
+			tickEnd=values[0].length,
+			range=max - min,
+			sfreq=MF.sfreq;
+
+			if(range<1000) {
+				sfreq=sfreq/2;
+			} else if(range<4000) {
+				sfreq=sfreq;   
+			} else if(range<8000){
+				sfreq=sfreq*2;
+			} else if(range<16000){
+				sfreq=sfreq*4;   
+			} else if(range<32000){
+				sfreq=sfreq*8;   
+			} else if(range<64000){
+				sfreq=sfreq*16;   
+			} else if(range<128000){
+				sfreq=sfreq*32;   
+			}
+		
+			var jmp=sfreq/2;
+
+			for (pos=0;pos<=tickEnd;pos=pos+jmp) {
+				if (pos>min) tickPositions.push(pos);
+			}
+			return tickPositions;
+		},
+		min:MF.startPlot,
+		max:MF.endPlot,
+		tickColor:'green',
+		tickLength:10,
+		tickWidth:3,
+		tickPosition:'inside',
+		labels:{
+			style:{fontWeight:'bold'},
+			formatter:function() {	    		
+				return (this.value/MF.sfreq).toFixed(1);
+			}
+		},
+		title:{
+			text:'Time in seconds'
+		},
+	},
+
+	yAxis:{
+		tickInterval:1,
+		gridLineWidth:2,	
+		tickPositioner:function(min, max) {
+			var ticked=[-1];
+			for (var i=0;i<=values.length;i++) {
+				ticked[i+1]=i;
+			}
+			return ticked;
+		},
+
+		labels:{
+			x:-50,
+			y:5,
+			style:{fontWeight:'bold'},
+			formatter:function () {
+				if (this.value>=0 && this.value<values.length) return MF.chNames[this.value]
+				else return ""
+			},	
+		},
+
+		title:{
+			text:'Channels',
+			x:-45
+		}
+	},
+
+	series:(function(){
+		var d=new Array();
+		for (var i=0; i<MF.numCh;i++) d.push({data:values[i],animation:false,color:MF.colors[i],visible:MF.visible[i]});
+		return d;
+	})(),
+
+	tooltip:{
+		enabled:true,
+		shared:false,
+		animation:false,
+
+		formatter:function(){return 'Time:'+(this.x/MF.sfreq).toFixed(3)+'s';},
+
+		crosshairs:{
+			width:2,
+			color:'green',
+			dashStyle:'shortdot'
+		},
+
+		positioner:function (e) {
+			return { x:MF.coordX - 75, y:10 };
+		}
+	}
+
+	});
+}
+
+
+function plotData_highChartButter(values) {
+	var MF=MEGFIFF;
+	var line, cloneToolTip;
+	MF.currentTime=[];
+	chart=new Highcharts.StockChart({
+		chart:{
+			animation:false,
+			renderTo:'container',
+				events:{
+					redraw:function() {
+						if (cloneToolTip) document.getElementsByClassName('highcharts-tooltip')[1].setAttribute('opacity',0);
+						MF.startPlot=chart.xAxis[0].getExtremes().min;
+						MF.endPlot=chart.xAxis[0].getExtremes().max;
+						MF.disWid=MF.endPlot - MF.startPlot; 
+					},
+					click:function() {
+						if (line) line.destroy(); 
+					line=this.renderer.path(this.tooltip.crosshairs[0].d.split(" ")).attr({
+					'stroke-width':2,
+					stroke:'red'
+					}).add();
+					if (cloneToolTip) chart.container.firstChild.removeChild(cloneToolTip); 
+					cloneToolTip=chart.tooltip.label.element.cloneNode(true); 
+					chart.container.firstChild.appendChild(cloneToolTip);
+					MF.currentTime=parseFloat(cloneToolTip.getElementsByTagName('tspan')[0].childNodes[0].data.match("[0-9.-]+"));
+					if (MF.dispTopo) topoPlot();
+				}
+			},
+			width:MF.width, 
+			height:MF.height, 
+			spacingLeft:50, 
+			borderColor:'#EBBA95', 
+			borderWidth:3, 
+			borderRadius:10, 
+			zoomType:'xy', 
+		},
+		scrollbar:{
+			enabled:true,
+			liveRedraw:false,
+			barBackgroundColor:'gray',
+			barBorderRadius:7,
+			barBorderWidth:0,
+			buttonBackgroundColor:'gray',
+			buttonBorderWidth:0,
+			buttonBorderRadius:7,
+			trackBackgroundColor:'white',
+			trackBorderWidth:1,
+			trackBorderRadius:8,
+			trackBorderColor:'#CCC',
+			rifleColor:'yellow',
+			buttonArrowColor:'yellow',
+		},
+
+		plotOptions:{
+			series:{
+				animation:false,
+				cursor:'pointer',
+				point:{
+					events:{
+						
+						click:function() {
+							if (this.series.color == '#1E90FF') { // Blue
+								MF.userSelection.push(MF.chNames[this.series.index]);
+								this.series.color="#FF0000"; // Red
+								MF.colors[this.series.index]="#FF0000"; 
+								this.series.graph.attr({ stroke:'#FF0000' });
+							}
+							else {
+								this.series.color="#1E90FF";
+								MF.colors[this.series.index]="#1E90FF";
+								this.series.graph.attr({ stroke:'#1E90FF' });
+								MF.userSelection.splice(MF.userSelection.indexOf(this.series.index),1);
+							}
+						}
+					}
+				},
+			}
+		},
+	
+		navigator:{
+			series:{
+				color:'green',
+				data:MF.GFP, 
+			},
+			handles:{
+				backgroundColor:'yellow',
+				borderColor:'red'
+			},
+			xAxis:{
+				tickPositioner:function(min, max) {
+				var tickPositions=[],jmp,sfreq=MF.sfreq;
+				if (MF.avgDis) {
+					tickEnd=MF.endPlot;
+					jmp=10;
+				}
+				else{
+					tickEnd=values[0].length;
+					jmp=sfreq*10;
+				}
+
+				for (pos=0;pos<=tickEnd;pos=pos+jmp) tickPositions.push(pos);
+			
+				return tickPositions;
+				},
+			
+				tickWidth:3,
+				tickPosition:'inside',
+				labels:{
+					formatter:function() {	    		
+						return ((this.value+(MF.prestim*MF.sfreq))/MF.sfreq).toFixed(2);
+					}
+				},
+				gridLineWidth:2
+			},
+		},
+	
+		rangeSelector:{
+			buttonTheme:{
+				fill:'none',
+				stroke:'none',
+				'stroke-width':0,
+				r:8,
+				style:{
+					color:'#039',
+					fontWeight:'bold'
+				},
+				states:{
+					select:{
+						fill:'#039',
+						style:{
+							color:'white'
+						}
+					}
+				}
+			},
+			buttons:[{
+				type:'second',
+				count:5*MF.sfreq/1000,
+				text:'5s'
+			}, {
+				type:'second',
+				count:10*MF.sfreq/1000,
+				text:'10s'
+			}, {
+				type:'second',
+				count:30*MF.sfreq/1000,
+				text:'30s'
+			}, {
+				type:'second',
+				count:60*MF.sfreq/1000,
+				text:'1m'
+			}],
+			inputStyle:{
+				color:'#039',
+				fontWeight:'bold'
+			},
+			labelStyle:{
+				color:'silver',
+				fontWeight:'bold'
+			},
+			selected:1,
+			inputEnabled:false
+		},
+
+		title:{
+			text:'File name:'+MF.fileName+'; Total Length:'+Math.round(MF.dataLength)+' sec'+'; Sampling rate:'+MF.sfreq+' Hz'
+		},
+
+		xAxis:{
+			tickPositioner:function (min, max) {
+				var pos=0,tickPositions=[],tickEnd,range=max-min,sfreq=MF.sfreq,jmp;        
+				if(range<1000) sfreq=sfreq/2;
+				else if(range<4000) sfreq=sfreq;   
+				else if(range<8000) sfreq=sfreq*2;
+				else if(range<16000) sfreq=sfreq*4;   
+				else if(range<32000) sfreq=sfreq*8;   
+				else if(range<64000) sfreq=sfreq*16;
+				else if(range<128000) sfreq=sfreq*32;   		
+				var jmp=sfreq/2;
+				
+				if (MF.avgDis) {
+					tickEnd=MF.endPlot;
+					jmp=50;
+				}
+				else{
+					tickEnd=values[0].length;
+					jmp=sfreq/2;
+				}
+
+				for (pos=0;pos<=tickEnd;pos=pos+jmp) tickPositions.push(pos);
+				return tickPositions;
+			},
+			tickColor:'green',
+			tickLength:10,
+			tickWidth:3,
+			tickPosition:'inside',
+			labels:{
+				formatter:function() {	    		
+					return ((this.value+(MF.prestim*MF.sfreq))/MF.sfreq).toFixed(3);
+				}
+			},
+			title:{
+				text:'Time in seconds'
+			},
+			plotLines : [{
+				value : Math.abs(Math.round(MEGFIFF.prestim*MEGFIFF.sfreq)),
+				color : 'red',
+				dashStyle : 'shortdash',
+				width : 1,
+			}]
+		},
+
+		yAxis:{
+			gridLineWidth:2,
+			min:MF.minRaster,
+			max:MF.maxRaster,
+			title:{
+				text:'Amplitude',
+				x:-45
+			}
+		},
+
+		series:(function(){
+			var d=new Array();
+			for (var i=0;i<MF.numCh;i++) d.push({data:values[i], animation:false, color:MF.colors[i],visible:MF.visible[i]});
+			return d;
+		})(),
+
+		tooltip:{
+			enabled:true,
+			shared:false,
+			animation:false,
+			formatter:function(){return 'Time:'+((this.x+(MF.prestim*MF.sfreq))/MF.sfreq).toFixed(3)+'s';},
+
+			crosshairs:{
+				width:2,
+				color:'green',
+				dashStyle:'shortdot'
+			},
+
+			positioner:function () {
+				return {x:window.event.clientX-75, y:10};
+			}
+		}
+
+	});
+}
+
+function extremesPlot(){
+	var MF=MEGFIFF;
+	try {MF.endPlot=chart.rangeSelector.buttonOptions[chart.rangeSelector.selected].count*1000+MF.startPlot;}
+	catch(err){MF.endPlot=MF.startPlot+MF.disWid;}
+	chart.xAxis[0].setExtremes(MF.startPlot,MF.endPlot);
+}
+
+function redraw(){
+	chart.destroy();
+	var MF=MEGFIFF;
+	if (MF.avgDis) 	plotData_highChart(MEG_data);
+	else {
+		try {MF.endPlot=chart.rangeSelector.buttonOptions[chart.rangeSelector.selected].count*1000+MF.startPlot;}
+		catch(err){MF.endPlot=MF.startPlot+MF.disWid;}	
+		plotData_highChart(MEG_data);
+		extremesPlot();
+		redrawFlags();
+	}
+}
+
+function redrawFlags(){
+	var MF=MEGFIFF;
+	if (MF.numEvent!=0) {
+		for (var i=0;i<MF.numEvent;i++) {
+			for (var j=0;j<MF.eventTimes[i].length;j++) chart.addSeries({type:'flags',data:[{x:(MF.eventTimes[i][j]*MF.sfreq),title:MF.eventNames[i]}],shape:'squarepin',states:{hover:{fillColor:'#395C84'}},y:-chart.plotHeight,color:'#5F86B3'},false);
+		}
+		chart.redraw();
+	}
+}

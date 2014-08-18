@@ -1,9 +1,44 @@
-#dropzone {
-	background-color: blue;
-	margin-left: 40%;
-	margin-right: 40%;
-	margin-top: 1%;
-	height: 200px;
-	line-height: 200px;
-	text-align: center;
+#drop_zone {
+	border:2px dashed #bbb;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	padding:50px;
+	text-align:center;
+	position: fixed;
+	top: 40%;
+	left: 1%;
+	width: 90%;
+	opacity: 0.4; 
+	z-index : 2;
+	font:20pt bold,"Vollkorn";color:#bbb;
 }
+
+#nondrop_zone {
+	position: fixed;
+	height : 100%;
+	width: 100%; 	
+}
+
+#canvas1 {
+	position : absolute;
+	top: 30;
+    left: 0;
+}
+
+#heatmapArea {
+	position : absolute;
+	top: 30;
+    left: 0;
+    width:500;
+    height:450
+}
+
+#container {
+	position : absolute;
+	top: 30;
+    left: 0;
+    width:100%;
+    height:100%
+}
+

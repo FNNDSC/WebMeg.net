@@ -1,0 +1,167 @@
+// Function to downsample the data
+function dwnSmp () {
+	var check=checkData(); if (check==0) return;
+	var data=finalData;
+	
+	var MF=MEGFIFF;
+	var sfreq=MF.sfreq;
+	var dwnfct=parseInt(prompt(["Enter downsampling factor. Current sampling rate : "] + sfreq));
+	if (dwnfct==undefined || dwnfct==NaN) return;
+	var smp=data[0].length;
+	var newsmp=Math.floor(smp/dwnfct);
+	var param=confirm("Old sampling rate: " + sfreq + "\n" +
+			"New sampling rate: " + sfreq/dwnfct + "\n" + 
+			"Old number of samples: " + smp + "\n" +
+			"New number of samples: " + newsmp);
+
+	if (param==true && smp!=newsmp) {
+		dwnSmpSt(data,dwnfct,newsmp,MF);
+		MF.startPlot=MF.startPlot/dwnfct;
+		MF.endPlot=MF.endPlot/dwnfct;
+		MEG_data=slice2d(data,MF.indDis);
+		MEG_data=displayOperations();
+		chart.destroy();
+		plotData_highChart(MEG_data);
+		chart.xAxis[0].setExtremes(MF.startPlot,MF.endPlot);
+	}
+}
+
+function dwnSmpSt(data,dwnfct,newsmp,MF){
+	MF.sfreq=MF.sfreq/dwnfct;
+	var numCh=data.length,j,tmp;
+	for (var i=0;i<numCh;i++) {
+		tmp=new Array(newsmp);
+		j=newsmp-1;
+		do {tmp[j]=data[i][j*dwnfct];}while(j--);
+		data[i]=tmp.slice();
+	}
+	tmp=new Float64Array(newsmp);
+	j=newsmp-1;
+	do{tmp[j]=MF.GFP[j*dwnfct];}while(j--);
+	MF.GFP=tmp;
+}
+
+// Function to initialize filters
+function filter(){
+    var check=checkData(); if (check==0) return;
+	document.fltform.srate.value=MEGFIFF.sfreq;
+	$("#ui-dialog-title-fltDlg").css("font-size","12pt");
+	$('div#fltDlg').dialog('open');
+	$(fltDlg).dialog("option","width", 320);
+	$(fltDlg).dialog("option","height",250);
+}
+
+// Function to start filtering and display
+function fltStart(){
+	$('div#fltDlg').dialog('close');
+	var MF=MEGFIFF,dtemp=document.fltform,hicut=dtemp.hicut.value/1,locut=dtemp.locut.value/1,notchval=dtemp.notchval.value/1,srate=dtemp.srate.value/1,numCh=MF.numCh;
+	MEG_data=slice2d(finalData,MF.indDis);
+	
+	if ((dtemp.lochk.checked==true) && (dtemp.hichk.checked==true)) {
+		if (hicut>srate/3.0) {alert("High Cutoff expected less than Sample Rate/3");return;}
+		if (locut<0 || locut>hicut) {alert("Low Cutoff expected between 0 and High Cutoff");return;}
+		MEG_data=fltData(MEG_data,srate,locut,hicut,0);
+	}
+
+	else if ((dtemp.lochk.checked==true)) {
+		if (locut<0 || locut>srate/3.0) {alert('Low cutoff expected between 0 and Sample rate/3');return;}
+		for(var i=0;i<numCh;i++) {
+			if (MF.goodCh[i]==1) MEG_data[i]=fltData(MEG_data[i],srate,locut,0,0);
+		}
+	}
+
+	else if ((dtemp.hichk.checked==true)) {
+		if (hicut<0 || hicut>srate/3.0) {alert("High Cutoff expected between 0 and Sample rate/3");return;}
+		for(var i=0;i<numCh;i++) {
+			if (MF.goodCh[i]==1) MEG_data[i]=fltData(MEG_data[i],srate,0,hicut,0);
+		}
+		
+	}
+
+	if ((dtemp.notchchk.checked==true)) {
+		if (notchval<0 || notchval>srate/3.0) {alert("Notch value expected between 0 and Sample rate/3");return;}
+		for(var i=0;i<numCh;i++) {
+			if (MF.goodCh[i]==1) MEG_data[i]=fltData(MEG_data[i],srate,notchval-2,notchval+2,1);
+		}
+	}
+	MEG_data=displayOperations();
+	GFP(MEG_data);
+	chart.destroy();
+	plotData_highChart(MEG_data);
+	chart.xAxis[0].setExtremes(MF.startPlot,MF.endPlot);
+	redrawFlags();
+}
+
+function chSlt() {
+    var check=checkData(); if (check==0) return;
+	var MF=MEGFIFF;
+	if (MF.chSlt==0) {
+		for (var i=0;i<MF.allChs.length;i++) {
+			var option=document.createElement("option");
+			option.text=MF.allChs[i];
+			chList.add(option,chList.options[null]);
+		}
+	}
+	MF.chSlt=1;
+    $("#ui-dialog-title-chDlg").css("font-size","10pt");
+	$('div#chDlg').dialog('open');
+}
+
+function chSub() {
+	var MF=MEGFIFF;
+	$('div#chDlg').dialog('close');
+	var chList=$("#chList").val();
+	var temp=chList.length;
+	if (temp==0 || temp==null) return;
+	MF.chNames=[];
+	MF.subLoc=[];
+	var j=0;
+	MF.goodCh=[];
+	for (var i=0;i<temp;i++) MF.goodCh[i]=1;
+	MF.numCh=temp;
+	var allChs=MF.allChs;
+	var dinfo=data_info;
+	for (var i=0;i<allChs.length;i++) {
+		if(chList.indexOf(allChs[i])==-1) MF.indDis[i]=-1;
+		else {
+			MF.indDis[i]=i;
+			MF.chNames[j]=allChs[i];
+			MF.subLoc.push(new Array());
+			MF.subLoc[j][0]=dinfo.info.chs[i].loc[0];
+			MF.subLoc[j][1]=dinfo.info.chs[i].loc[1];
+			MF.subLoc[j][2]=dinfo.info.chs[i].loc[2];
+			MF.colors[j]='#1E90FF';
+			j++;
+		}
+	}
+	MEG_data=slice2d(finalData,MF.indDis);
+	MEG_data=displayOperations();
+	GFP(MEG_data);
+	plotData_highChart(MEG_data);
+	chart.xAxis[0].setExtremes(MF.startPlot,MF.endPlot);
+	redrawFlags();
+}
+
+function mtgDf() {
+    var check=checkData(); if (check==0) return;
+	if (MF.fileType=='fif') {
+		alert('No need for montage for a MEG fif file')
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

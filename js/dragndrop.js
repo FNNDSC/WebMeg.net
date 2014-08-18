@@ -4,6 +4,12 @@
 function initialize_dragndrop() {
 
 	// drag enter and drag leave
+	MEGFIFF = [];
+	myTimer = undefined;
+
+	MEGFIFF.coordX=0;
+	MEGFIFF.coordY=0;
+
 	var dropZone = document.getElementById('drop_zone');
 	dropZone.addEventListener('dragover', handleDragOver, false);
 	dropZone.addEventListener('drop', on_drop, false);
@@ -18,8 +24,17 @@ function initialize_dragndrop() {
 	
 	// Select event file
 	document.getElementById('eventSelector').addEventListener('change', loadEvents, false); 
+	
+	// Select event file
+	document.getElementById('macSelector').addEventListener('change', macSelect, false);
+	
 	//on mousescroller
 	document.body.addEventListener("mousewheel", mousescroll, false);
+	
+	document.onmousemove=function(e) {
+		   var e=e||window.event;
+		   MEGFIFF.coordX=e.pageX||e.clientX+document.body.scrollLeft;
+		}
 };
 
 /**
@@ -72,17 +87,12 @@ function on_drop(evt) {
 		alert('Drag only one file please');
 		return;
 	}
-
 	load_files(_filelist);
 };
 
 function mousescroll(event) {
-	if (event.wheelDelta < 0) {
-		//plotData();
-	}
-	else {
-		//plotData();
-	}
+	if (event.wheelDelta < 0) moveLeft();
+	else moveRight();
 }
 
 function handleFileSelection(evt) {    
@@ -91,203 +101,192 @@ function handleFileSelection(evt) {
   } // handleFileSelection
 
 function loadEvents(evt) {    
-	var files = evt.target.files;
-    var file = files[0];           
-    var reader = new FileReader();
-    reader.onload = function() {
-      event = addLoadEvents(this.result);            
+	var files=evt.target.files;
+    var file=files[0];           
+    var reader=new FileReader();
+    reader.onload=function() {
+      event=addLoadEvents(this.result);            
     }
     reader.readAsText(file)
-  } // handleFileSelection
+  } 
 
-window.onkeydown = function(e) {
-    if (e.keyCode == 40) { // Down key
-    	if (MEGFIFF.plotType == 'raster') {
-        	MEGFIFF.scale = 1 / 2;
-        	MEGFIFF.finalScale = MEGFIFF.finalScale * MEGFIFF.scale;
-    		MEG_data1 = rasterPlot(MEG_data1);
+function macSelect(evt) {
+	var files=evt.target.files;
+    var file=files[0];           
+    var reader=new FileReader();
+    reader.onload=function() {
+      loadMac(this.result);            
+    }
+    reader.readAsText(file)
+  } 
+
+window.onkeydown=function(e) {
+	var MF=MEGFIFF;
+    if (e.keyCode==38 || e.keyCode==40) { // Up and Down Key
+    	if (MF.plotType=='raster') {
+    		if (e.keyCode==40) MF.scale=MF.scale/2;
+    		else MF.scale=2*MF.scale;
     	}
     	else {
-    		if (MEGFIFF.minRaster == undefined) defineButter();
-    		var temp = Math.abs((MEGFIFF.minRaster < MEGFIFF.maxRaster)?MEGFIFF.minRaster:MEGFIFF.maxRaster);
-    		MEGFIFF.minRaster = MEGFIFF.minRaster - 0.2 * temp;
-    		MEGFIFF.maxRaster = MEGFIFF.maxRaster + 0.2 * temp;
+    		if(e.keyCode==38) MF.butterAmp=1;
+    		else MF.butterAmp=-1;
     	}
-    	chart.destroy();
-    	plotData_highChart(MEG_data1);
+    	var delayTime=1000; // in ms
+	    if (myTimer) clearTimeout(myTimer);
+	    myTimer=setTimeout('scale();',delayTime);
     }
-    
-    if (e.keyCode == 38) { // Up key
-    	if (MEGFIFF.plotType == 'raster') {
-    		MEGFIFF.scale = 2;
-        	MEGFIFF.finalScale = MEGFIFF.finalScale * MEGFIFF.scale;
-    		MEG_data1 = rasterPlot(MEG_data1);
-    	}
-    	else {
-    		if (MEGFIFF.minRaster == undefined) defineButter();
-    		var temp = Math.abs((MEGFIFF.minRaster < MEGFIFF.maxRaster)?MEGFIFF.minRaster:MEGFIFF.maxRaster);
-    		MEGFIFF.minRaster = MEGFIFF.minRaster + 0.2 * temp;
-    		MEGFIFF.maxRaster = MEGFIFF.maxRaster - 0.2 * temp;
-    	}
-    	chart.destroy();
-    	plotData_highChart(MEG_data1);
-    }
-    
-    if (e.keyCode == 46) { // Delete key
-        if(isEmpty(MEGFIFF.userSelection)) {
-        	alert('No Channels selected to delete');
-        }
+
+    if (e.keyCode==46) { // Delete key
+        if(isEmpty(MF.userSelection)) alert('No Channels selected to delete');
         else {
-        	for (var i = 0;i < MEGFIFF.userSelection.length;i++) {
-        		MEGFIFF.visible[MEGFIFF.userSelection[i]] = false;
-        		MEGFIFF.badChannels[MEGFIFF.userSelection[i]] = 1;
+        	var temp, temp1;
+        	MF.numCh-=MF.userSelection.length;
+        	for (var i=0,j=MF.userSelection.length;i<j;i++) {
+        		temp=MF.allChs.indexOf(MF.userSelection[i]);
+        		MF.indDis[temp]=-1;
+        		temp1=MF.chNames.indexOf(MF.userSelection[i]);
+        		MF.chNames.splice(temp1,1);
+        		MF.colors.splice(temp1,1);
+        		MF.goodCh.splice(temp1,1);
+        		if (MF.plotType=="butterfly") MEG_data.splice(temp1,1);
         	}
-        	MEGFIFF.scale = 1;
-        	chart.destroy();
-        	plotData_highChart(MEG_data1);
+
+        	if (MF.plotType=="raster") {
+        		MEG_data=slice2d(finalData,MF.indDis);
+        		MEG_data=displayOperations();
+        	}
+        	GFP(MEG_data);
+        	redraw();
+        	MF.userSelection=[];
         }
     }
     
-    if (e.keyCode == 39) { // Right key
-    	var disLen = MEGFIFF.displayDuration;
-    	if (MEGFIFF.endPlotTime + disLen < MEGFIFF.dataLength) {
-    		MEGFIFF.startPlotTime = MEGFIFF.startPlotTime + disLen; 
-    		MEGFIFF.endPlotTime = MEGFIFF.endPlotTime + disLen;
-    	}
-    	else {
-    		MEGFIFF.endPlotTime = MEGFIFF.dataLength;
-    		MEGFIFF.startPlotTime = MEGFIFF.endPlotTime - disLen;
-    	}
-    	if (MEGFIFF.plotType == 'raster') {
-    		delete MEG_data1;
-        	MEG_data = finalData.slice(0,MEGFIFF.numChannels);
-    		MEG_data1 = displayOperations();
-    		chart.destroy();
-    		plotData_highChart(MEG_data1);
-    	}
-    	else {
-    		butterflyPlot();
-    	}
-    	
-    }
+    if (e.keyCode==39) moveRight();
+        
+    if (e.keyCode==37) moveLeft();
     
-    
-    if (e.keyCode == 37) { // Left key
-    	var disLen = MEGFIFF.displayDuration;
-    	if (MEGFIFF.startPlotTime - disLen > 0) {
-    		MEGFIFF.startPlotTime = MEGFIFF.startPlotTime - disLen; 
-    		MEGFIFF.endPlotTime = MEGFIFF.endPlotTime - disLen;
-    	}
-    	else {
-    		MEGFIFF.endPlotTime = disLen;
-    		MEGFIFF.startPlotTime = 0;
-    	}
-    	if (MEGFIFF.plotType == 'raster') {
-    		delete MEG_data1;
-        	MEG_data = finalData.slice(0,MEGFIFF.numChannels);
-    		MEG_data1 = displayOperations();
-    		chart.destroy();
-    		plotData_highChart(MEG_data1);
-    	}
-    	else {
-    		butterflyPlot();
-    	}
-    }
-    
-    
-    if (e.keyCode == 33) { // Page Up key
-    	if (MEGFIFF.endPlotTime + MEGFIFF.displayDuration < MEGFIFF.dataLength) {
-    		MEGFIFF.startPlotTime = MEGFIFF.startPlotTime + MEGFIFF.displayDuration; 
-    		MEGFIFF.endPlotTime = MEGFIFF.endPlotTime + MEGFIFF.displayDuration;
-    	}
-    	else {
-    		MEGFIFF.endPlotTime = MEGFIFF.dataLength;
-    		MEGFIFF.startPlotTime = MEGFIFF.endPlotTime - MEGFIFF.displayDuration;
-    	}
-    	if (MEGFIFF.plotType == 'raster') {
-        	MEG_data = finalData.slice(0,MEGFIFF.numChannels);
-    		MEG_data1 = displayOperations();
-    		chart.destroy();
-    		plotData_highChart(MEG_data1);
-    	}
-    	else {
-    		butterflyPlot();
-    	}
-    }
-    
-    
-    if (e.keyCode == 34) { // Page Down key
-    	if (MEGFIFF.startPlotTime - 10 > 0) {
-    		MEGFIFF.startPlotTime = MEGFIFF.startPlotTime - MEGFIFF.displayDuration; 
-    		MEGFIFF.endPlotTime = MEGFIFF.endPlotTime - MEGFIFF.displayDuration;
-    	}
-    	else {
-    		MEGFIFF.endPlotTime = MEGFIFF.displayDuration;
-    		MEGFIFF.startPlotTime = 0;
-    	}
-    	if (MEGFIFF.plotType == 'raster') {
-        	MEG_data = finalData.slice(0,MEGFIFF.numChannels);
-    		MEG_data1 = displayOperations();
-    		chart.destroy();
-    		plotData_highChart(MEG_data1);
-    	}
-    	else {
-    		butterflyPlot();
-    	}
-    }
-    
-    
-    if (e.which == 82 && e.ctrlKey) { // Press Crtl + r for adding Event type
+    if (e.which==82 && e.ctrlKey) { // Press Ctrl + r for adding Event type
     	e.preventDefault();
     	addEventGroup(e);
     }
     
-    if (e.which == 69 && e.ctrlKey) { // Press Crtl + e for adding Event
+    if (e.which==69 && e.ctrlKey) { // Press Ctrl + e for adding Event
     	e.preventDefault();
     	addEvent();
     }
     
-    if (e.which == 68 && e.ctrlKey) { // Press Ctrl + d for deleting Event
+    if (e.which==68 && e.ctrlKey) { // Press Ctrl + d for deleting Event
     	e.preventDefault();
     	deleteEvent();
     }
     
-    if (e.which == 70 && e.ctrlKey) { // Press Ctrl + f for deleting event group currently selected
+    if (e.which==70 && e.ctrlKey) { // Press Ctrl + f for deleting event group currently selected
     	e.preventDefault();
     	deleteEventGroup();
     }
     
-    if (e.which == 66 && e.ctrlKey) { // Press Ctrl + b for superimposing data
+    if (e.which==66 && e.ctrlKey) { // Press Ctrl + b for superimposing data
     	e.preventDefault();
     	butterflyPlot();
+    	extremesPlot();
     }
     
-    if (e.which == 67 && e.ctrlKey) { // Press Ctrl + c for time series data
-    	seriesPlot();
+    if (e.which==67 && e.ctrlKey) seriesPlot();// Press Ctrl + c for time series data
+    	
+    if (e.which==107) { // Press + to add channels
+    	if(MF.indDis[MF.indDis.length-1]+1<MEGFIFF.allChs.length) {
+        	MF.numCh++;
+    		MF.indDis.push(MF.indDis[MF.indDis.length-1]+1)
+			MEG_data=slice2d(finalData,MF.indDis);
+			MF.goodCh.push(1);
+			MF.chNames.push(MF.allChs[MF.numCh-1]);
+			MF.colors.push("#1E90FF");
+			MEG_data=displayOperations();
+			redraw();
+    	}
+    }
+    
+    if (e.which==109) { // Press - to subtract channels
+    	if(MF.indDis[MF.indDis.length-1]+1>1) {
+    		MF.numCh--;
+    		MF.indDis.pop(MF.indDis[MF.indDis.length-1]+1)
+			MEG_data=slice2d(finalData,MF.indDis);
+			MEG_data=displayOperations();
+			MF.goodCh.pop();
+			MF.chNames.pop();
+			MF.colors.pop();
+			MEG_data=displayOperations();
+			redraw();
+    	}
     }
 }
 
 // Resize the window
-window.onresize = function(e) {
+
+window.onresize=function(e){
+	clearTimeout(this.id);
+    this.id = setTimeout(doneResizing, 500);
+};
+
+function doneResizing(){
 	try {
-		MEGFIFF.width = this.window.innerWidth * 1;
-		MEGFIFF.height = this.window.innerHeight * 0.9;
-		chart.destroy();
-		plotData_highChart(MEG_data1);
+		MEGFIFF.width=this.window.innerWidth * 1;
+		MEGFIFF.height=this.window.innerHeight * 0.9;
+		redraw();
 	}
 	catch(err) {};
 }
-
-function checkData() {
+   
+function checkData(){
 	// Check if the any data is loaded
-	try {
-		MEGFIFF;
-	}
+	try {MEG_data;}
 	catch (err) {
 		alert('Please load the file first');
 		return 0;
 	}
 }
 
+function moveLeft(){
+	var MF=MEGFIFF;
+	var disLen=chart.xAxis[0].getExtremes().max-chart.xAxis[0].getExtremes().min;
+	if (MF.startPlot-disLen>0) {
+		MF.startPlot=MF.startPlot - disLen; 
+		MF.endPlot=MF.endPlot - disLen;
+	}
+	else {
+		MF.endPlot=disLen;
+		MF.startPlot=0;
+	}
+	if (MF.plotType=='raster') extremesPlot();
+	else butterflyPlot();
+}
 
+function moveRight(){
+	var MF=MEGFIFF;
+	var disLen=chart.xAxis[0].getExtremes().max-chart.xAxis[0].getExtremes().min;
+	if (MF.endPlot+disLen < chart.xAxis[0].getExtremes().dataMax) {
+		MF.startPlot = MF.startPlot + disLen; 
+		MF.endPlot = MF.endPlot + disLen;
+	}
+	else {
+		MF.endPlot = chart.xAxis[0].getExtremes().dataMax;
+		MF.startPlot = MF.endPlot - disLen;
+	}
+	if (MF.plotType == 'raster') extremesPlot()
+	else butterflyPlot();
+}
 
+function scale(){
+	var MF=MEGFIFF;
+	if (MF.plotType=='raster') {
+    	MEG_data=slice2d(finalData,MF.indDis);
+		MEG_data=displayOperations();
+	}
+	else {
+	    	if (MF.minRaster==undefined) defineButter();
+	    	var temp=Math.abs((MF.minRaster < MF.maxRaster)?MF.minRaster:MF.maxRaster)*MF.butterAmp;
+	    	MF.minRaster=MF.minRaster + 0.2 * temp;
+	    	MF.maxRaster=MF.maxRaster - 0.2 * temp;
+	}
+	redraw();
+}

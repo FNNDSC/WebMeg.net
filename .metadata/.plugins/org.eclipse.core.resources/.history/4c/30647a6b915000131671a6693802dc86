@@ -1,0 +1,93 @@
+function load_files(filelist) {
+	var MF=MEGFIFF;
+	$('#drop_zone').css('opacity',0);
+	$('#drop_zone').css('z-index',-1);
+	// call the load function with the file list
+	var _number_of_files=filelist.length;
+	for ( var i=0; i<_number_of_files; i++) {
+		// Check if valid format is provided
+		var fileExtension=filelist[i].name.split('.').pop();
+		if (fileExtension != "fif" && fileExtension != "edf") {
+			alert(fileExtension + ' is not currently supported!!!\n Supported file formats include *_raw.fiff and *.edf');
+			return;
+		}
+		MF.fileName=filelist[0].name;
+		MF.fileType=fileExtension;
+		var reader=new FileReader();
+		reader.onerror=errorHandler;
+		reader.onload=loadHandler(filelist[i]);
+		// start reading this file
+		reader.readAsArrayBuffer(filelist[i]);
+	}
+}
+
+// the HTML5 File Reader callbacks
+
+// setup callback for errors during reading
+var errorHandler=function(e) {
+
+	console.log('Error:' + e.target.error.code);
+
+};
+// setup callback after reading
+var loadHandler=function(file) {
+
+	return function(e) {
+		
+		var MF=MEGFIFF;
+		// reading complete
+		var _data=e.target.result;
+		// all done, start the parsing
+		var combo=parse(_data);
+		
+		data_info=combo[0];
+		finalData=combo[1];
+
+		if (MF.fileType=='fif') {
+			MF.numCh=20;
+			// get the info and the data
+			time=combo[2];
+			
+			// Slice data to the required data to be plotted
+			MF.allChs=[];
+			for (var i=0;i<data_info.info.chs.length;i++) MF.allChs[i]=data_info.info.chs[i].ch_name;
+
+			// Initialize plotting parameters
+			chartInitialize(MF.numCh, data_info.info.sfreq,MF.allChs.slice(0,MF.numCh));
+			
+			MF.plotType='raster';
+			MEG_data=slice2d(finalData,MF.indDis);
+			var combo=absMax(MEG_data,1,1);
+			var maxValue=combo[0];
+			MF.scale=10*Math.pow(10,Math.floor(Math.log(maxValue)/Math.log(10)))/(1e-10);
+			MF.scale=1;
+			MF.finalScale=MF.scale;
+			// Scale data for proper display
+			MEG_data=displayOperations();
+			GFP(MEG_data);
+			// Plot the data
+			plotData_highChart(MEG_data);
+			MF.startPlot=0;
+			MF.endPlot=chart.rangeSelector.buttonOptions[chart.rangeSelector.selected].count*1000;
+			//chart.xAxis[0].setExtremes(MF.startPlot,MF.endPlot);
+
+			MF.subLoc=[];
+			for (var i=0;i<MF.chNames.length;i++) {
+				MF.subLoc.push(new Array());
+				MF.subLoc[i][0]=data_info.info.chs[i].loc[0];
+				MF.subLoc[i][1]=data_info.info.chs[i].loc[1];
+				MF.subLoc[i][2]=data_info.info.chs[i].loc[2];
+			}
+		}
+		else if(MF.fileType=='edf') {
+			MF.numCh=20;
+			chartInitialize(MF.numCh, data_info.samples[0],data_info.label);
+			MF.allChs=[];
+			for (var i=0;i<data_info.label.length;i++) MF.allChs[i]=data_info.label[i];
+			MF.scale=2;
+			MF.finalScale=MF.scale;
+			seriesPlot();
+		}
+		MF.plot=true;	
+	};
+};

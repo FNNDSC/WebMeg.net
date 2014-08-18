@@ -1,4 +1,7 @@
-<html>
+<!DOCTYPE html>
+
+<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+<meta content="utf-8" http-equiv="encoding">
 <head>
 <title>WebMEG</title>
 <script type="text/javascript" src="js/dragndrop.js"></script>
@@ -9,18 +12,21 @@
 <script type="text/javascript" src="js/formatReaders/edfReader.js"></script>
 <script type="text/javascript" src="js/plotData_highChart.js"></script>
 <script type="text/javascript" src="js/chartInitialize.js"></script>
-<script type="text/javascript" src="js/firstGood.js"></script>
-<script type="text/javascript" src="js/clone.js"></script>
+<script type="text/javascript" src="js/preProcess.js"></script>
 <script type="text/javascript" src="js/eventFunctions.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script type="text/javascript" src="js/highstock.js"></script>
 <script type="text/javascript" src="js/exporting.js"></script>
 <script type="text/javascript" src="js/avgFunctions.js"></script>
 <script type="text/javascript" src="js/displayOperations.js"></script>
+<script type="text/javascript" src="js/fltData.js"></script>
+<script type="text/javascript" src="js/macros.js"></script>
 <script type="text/javascript" src="js/menu/jquery.js"></script>
-<script type="text/javascript" src="js/jquery.flot.js"></script>
 <script type="text/javascript" src="js/heatmap.js"></script>
+<script type="text/javascript" src="js/fft.js"></script>
 <script type="text/javascript" src="js/menu/menu.js"></script>
+
+
 <link rel="stylesheet" type="text/css" href="css/style.css"/>
 <link type="text/css" href="css/menu.css" rel="stylesheet" />
 <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.0/themes/ui-lightness/jquery-ui.css" />
@@ -56,36 +62,54 @@ div#menu { margin:1px auto; }
     
         <li id="File"><a href="#" class="parent"><span>File</span></a>
             <ul>
-                <li><a href="#"><span> <input type="file" id="fileSelector" style="display: none;">
-  <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('fileSelector').click();">Load file for display</span></span></a></li>
-  <li><a href="#"><span> <input type="file" id="eventSelector" name = "file" style="display: none;">
-  <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('eventSelector').click();">Load events csv/txt</span></span></a></li>
+                <li><a href="#"><span> <input type="file" id="fileSelector" style="display: none;"/>
+                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('fileSelector').click();">Load file for display</span></span></a></li>
+                
+                <li><a href="#"><span> <input type="file" id="eventSelector" name="file" style="display: none;">
+                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('eventSelector').click();">Load events csv/txt</span></span></a></li>
+                
+                <li><a href="#"><span> <input type="file" id="macSelector" name="file" style="display: none;">
+                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('macSelector').click();">Load macro</span></span></a></li>
+                
   				<li><a href="#"><span onclick="javascript:saveEvents()">Save events in csv/txt</span></a></li>
+  				<li><a href="#"><span onclick="javascript:saveMac()">Save macro</span></a></li>
             </ul>
         </li>
-        <li id="eventAddGroup"><a href="#" class="parent"><span>Add Events</span></a>
+        
+         <li id="preproc"><a href="#" class="parent"><span>Pre-process</span></a>
             <ul>
-            	<li><a href="#"><span onclick="javascript:addEventGroup(this)">Create Event Group</span></a></li>
-            	<li><a href="#"><span onclick="javascript:addEvent()">Mark New Event <p style="text-align:right;float:right">  Ctrl + e </p> </span></a></li>
+            	<li><a href="#"><span onclick="javascript:filter()">Filter</span></a></li>
+            	<li><a href="#"><span onclick="javascript:dwnSmp()">Downsample Data</span></a></li>
+            	<li><a href="#"><span onclick="javascript:chSlt()">Channel Selection</span></a></li>
+            	<!-- <li><a href="#"><span onclick="javascript:mtgDf()">Default Montage</span></a></li> -->
+            	<!-- <li><a href="#"><span onclick="javascript:mtgSlt()">Custom Montage</span></a></li> -->
+            </ul>
+        </li>
+        
+        <li id="eventAddGroup"><a href="#" class="parent"><span>Events</span></a>
+            <ul>
+            	<li><a href="#"><span onclick="javascript:addEventGroup(this)">Create Event Group <p style="text-align:right;float:right">  Ctrl + r </p> </span></a></li>
+            	<li><a href="#"><span onclick="javascript:addEvent(false)">Mark New Event <p style="text-align:right;float:right">  Ctrl + e </p> </span></a></li>
             	<li><a href="#"><span onclick="javascript:deleteEventGroup()">Delete Group <p style="text-align:right;float:right"> Ctrl + f </p> </span></a></li>
             	<li><a href="#"><span onclick="javascript:deleteEvent()">Delete Event <p style="text-align:right;float:right"> Ctrl + d </p></span></a></li>
+            	<li><a href="#"><span onclick="javascript:addDelay()">Adjust delay</span></a></li>
             	<li><a href="#"><span onclick="javascript:setTrgParam()">Detect from trigger line </span></a></li>
             </ul>
         </li>
         
         <li><a href="#" class="parent"><span>Display</span></a>
             <ul>
-                <li><a href="#"><span>Plot type</span></a></li>
+                <li><a href="#"><span onclick="javascript:plotCont()">Plot Continous Data</span></a></li>
                 <li><a href="#"><span onclick="javascript:changeDuration()">Display duration</span></a></li>
                 <li><a href="#"><span onclick="javascript:avgParams()">Average data</span></a></li>
-                <li><a href="#"><span onclick="javascript:topoPlotInitialize()">Plot Topography</span></a></li>
+                <li><a href="#"><span onclick="javascript:topoInit()">Plot Topography</span></a></li>
             </ul>
         </li>
-        <li><a href="#" class="parent"><span onclick="javascript:fltData()">Filter</span></a>
+        
         <li><a href="#" class="parent"><span>Help</span></a>
         	<ul>
-                <li><a href="https://www.dropbox.com/sh/d5sr68bsedgvtwi/z2g1JIh1Y8" target = "_blank"><span>Download Sample Data</span></a></li>
-                <li><a href="https://www.github.com/FNNDSC/WebMeg.net" target = "_blank"><span>How to use WebMEG</span></a></li>
+                <li><a href="https://www.dropbox.com/sh/d5sr68bsedgvtwi/z2g1JIh1Y8" target="_blank"><span>Download Sample Data</span></a></li>
+                <li><a href="https://www.github.com/FNNDSC/WebMeg.net" target="_blank"><span>How to use WebMEG</span></a></li>
             </ul>
         </li>
     </ul>
@@ -100,70 +124,76 @@ div#menu { margin:1px auto; }
 </div>
 
 <div id="topoDlg" title="Topography" style="font-size:10pt" size="10">
-	<canvas id="canvas1" width="500" height=450" z-index="-1"></canvas>
-	<div id="heatmapArea" z-index="1"></div>
+	<canvas id="canvas1" width="500" height="600" z-index="-1"></canvas>
+	<div id="heatmapArea" style="width:500px;height:500px;"></div>
 </div>
 
 <div id="evtDlg" title="Detect Events from Trigger Line" style="font-size:10pt" size="10">
-	<p><label>Trigger Line 1 : </label><input type="checkbox" name="trg1"> <select id = "chList1"></select></p>
+	<p><label>Trigger Line 1 : </label><input type="checkbox" name="trg1"> <select id="chList1"></select></p>
 	<br/>
-	<p><label>Trigger Line 2 : </label><input type="checkbox" name="trg2"> <select id = "chList2"></select></p>
+	<p><label>Trigger Line 2 : </label><input type="checkbox" name="trg2"> <select id="chList2"></select></p>
 	<br/>
-    <p><label for="thres">Threshold: </label> <input type="text" name="thresVal" size="5" value="10"></p>
+    <p><label for="thres">Threshold: </label> <input type="text" name="thresVal" size="5" value="0.5"></p>
     <br/>
     <p><center><button id="evtSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="javascript:evtDetect()">Ok</button></center></p>
     <br/>
 </div>
 
+<div id="chDlg" title="Select channels" style="font-size:12pt" size="10">
+<p><select id="chList" name="chList" size="5" multiple="multiple" style="width:150px; height:500px"></p>
+</select>   
+<br/>
+<br/>
+<p><center><button id="chSubmit" type="button" style="height: 25px; width:100px;font-size:12pt" onclick="javascript:chSub()">Ok</button></center></p>                              
+</div>
 
-<div id="fltDlg" title="Filter properties" style="display:block;font-size:12pt;height:300px;width:300px">
-	<form name="appform">
-		
+
+<div id="fltDlg" title="Filter properties" style="font-size: 10pt">
+	<form name="fltform">
+	<br>	
 	<label for="lowactive"> Low Cutoff frequency (Hz)</label>
-	<input type="checkbox" name="lowactive"> 
-	<input type="text" name="lowcutoff" size="5" onChange="FIR.go()" value="1"> 
+	<input type="checkbox" name="lochk"> 
+	<input type="text" name="locut" size="5"value="1"> 
+	<p>
 	<br/>
+	
 	
 	<label for="highactive">High Cutoff frequency (Hz)</label>
-	<input type="checkbox" name="highactive"> 
-	<input type="text" name="highcutoff" size="5" onChange="FIR.go()" value="100">
+	<input type="checkbox" name="hichk"> 
+	<input type="text" name="hicut" size="5" value="100">
 	<p>
+	<br/>
 	
 	<label for="notchactive">Notch filter</label>
-	<input type="checkbox" name="notchactive"> 
-	<input type="text" name="notchval" size="5" onChange="FIR.go()" value="60">
+	<input type="checkbox" name="notchchk"> 
+	<input type="text" name="notchval" size="5" value="60">
 	<p>
-	
-	<label for="filterorder">Filter order: </label> 
-	<input type="text" name="filterorder" size="5" onChange="FIR.go()" value="100">
 	<br/>
-	
+
 	<label for="samplerate">Sample rate: </label> 
-	<input type="text" name="samplerate" size="5" readonly=true value=''>
+	<input type="text" name="srate" size="5" readonly=true value='' style="background-color:rgb(211,211,211);">
+	<p>
 	<br/>
+	<center><button id="fltSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="javascript:fltStart()">Ok</button></center></p>
 	
 	</form>
-	
-	<h3>Impulse Response</h3>
-    <div id="impulseresponse" style="width:300px;height:100px;"></div>
-	<h3>Frequency Response</h3>
-    <div id="frequencyresponse" style="width:300px;height:100px;"></div>
 	<br/>
 </div>
 
 
 <div style="visibility: hidden" id="copyright">Copyright &copy; 2013 <a href="http://apycom.com/">Apycom jQuery Menus</a></div>
 <script>
-window.onload = function() {
-$('div#avgDialog').dialog({ autoOpen: false })
-$('div#fltDlg').dialog({autoOpen : false,width : 800, height : 700})
-$('div#topoDlg').dialog({autoOpen : false,width : 500, height : 500,close: function() {MEGFIFF.dispTopo = false}})
-$('div#evtDlg').dialog({autoOpen : false,width : 232, height : 195,open: function (event, ui) {$('#evtDlg').css('overflow', 'hidden');}})
+window.onload=function() {
+$('div#avgDialog').dialog({ autoOpen:false })
+$('div#fltDlg').dialog({autoOpen:false,width:800, height:700})
+$('div#topoDlg').dialog({autoOpen:false,width:600, height:600,close:function() {clearTopo();MEGFIFF.dispTopo=false;}})
+$('div#evtDlg').dialog({autoOpen:false,width:232, height:195,open:function (event, ui) {$('#evtDlg').css('overflow', 'hidden');}})
+$('div#chDlg').dialog({autoOpen:false,width:190, height:620, top:100 ,open: function (event, ui) {$('#chDlg').css('overflow', 'hidden');}})
 
 if (localStorage.avg) {
 	$('#drop_zone').css('opacity',0);
 	$('#drop_zone').css('z-index',-1);
-	plotData_highChart(MEG_data1);
+	plotData_highChart(MEG_data);
 	localStorage.removeItem('avg');
 }
 else {
@@ -178,14 +208,14 @@ else {
 
 <script type="text/javascript">
 // Update tracking information of the website
-  var _gaq = _gaq || [];
+  var _gaq=_gaq || [];
   _gaq.push(['_setAccount', 'UA-39084119-1']);
   _gaq.push(['_trackPageview']);
 
   (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    var ga=document.createElement('script'); ga.type='text/javascript'; ga.async=true;
+    ga.src=('https:'==document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s=document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
 
 </script>

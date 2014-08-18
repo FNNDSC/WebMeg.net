@@ -1,0 +1,205 @@
+/* Functions used to operate on data for display
+ */
+
+function displayOperations() {
+	var MF=MEGFIFF;
+
+	// Find absolute maximum in a 1-d or 2-d array
+	if (MF.plotType=='raster') {
+		var combo=absMax(MEG_data,1,1);
+		var maxValue=combo[0];
+		// Normalize the array based on maximum value
+		MEG_data=normalizeArray(MEG_data,maxValue);
+		MEG_data=rasterPlot(MEG_data);
+	}
+	return MEG_data;
+};
+
+function rasterPlot(values) {
+	var MF=MEGFIFF;
+	MF.finalScale=MF.finalScale*MF.scale;
+	MF.scale=1;
+	var scale=MF.finalScale; // scale to be multiplied with data
+	var dataLength=values[0].length;
+	// Scale the data correctly
+	for (var i=0;i<MF.numCh;i++) {
+		if (MF.goodCh[i]==1) {
+			for (var j=0;j<dataLength;j++) values[i][j]=values[i][j]*scale;		
+		}	
+	}
+	
+	for (var i=0;i < MF.numCh;i++) {
+		if (MF.goodCh[i]==1) {
+			for (var j=0;j < dataLength;j++) {
+				values[i][j]=values[i][j] + i;
+			}		
+		}	
+	}
+	return values;
+};
+
+function changeDuration() {
+	var check=checkData(); if (check==0) return;
+	var MF=MEGFIFF;
+	var sfreq=MF.sfreq;
+	var dur=prompt("Enter duration of display in s : ",MF.displayDuration);
+	if (dur==null || dur=="" || dur > chart.xAxis[0].getExtremes().dataMax/sfreq || dur<0 || isNaN(parseFloat(dur))) {
+		alert('Time should be between 0 and ' + MF.dataLength);return;
+	}
+
+	MF.displayDuration=parseFloat(dur);
+	var tmp1=chart.xAxis[0].getExtremes().min;
+	var tmp2=dur*MF.sfreq;
+	var tmp=tmp1+tmp2;
+	if(tmp > chart.xAxis[0].getExtremes().dataMax) {MF.endPlot=chart.xAxis[0].getExtremes().max;MF.startPlot=MF.endPlot-tmp2;}
+	else {MF.startPlot=tmp1;MF.endPlot=tmp}
+	chart.xAxis[0].setExtremes(MF.startPlot,MF.endPlot);
+}
+
+// Function to switch the data display to butterfly plot
+function butterflyPlot() {
+	var MF=MEGFIFF;
+	MF.plotType='butterfly';
+	MEG_data=slice2d(finalData,MF.indDis);
+	if (MF.fileType=='fif') {
+		var combo=absMax(MEG_data,1,1);
+		var maxValue=combo[0];
+		MEG_data=normalizeArray(MEG_data,maxValue);
+		MEG_data=deMean(MEG_data);
+	}
+	chart.destroy();
+	plotData_highChart(MEG_data);
+	redrawFlags();
+	MF.minRaster=chart.yAxis[0].min;
+	MF.maxRaster=chart.yAxis[0].max;
+}
+
+function defineButter() {
+	var MF=MEGFIFF;
+	MF.minRaster=chart.yAxis[0].min;
+	MF.maxRaster=chart.yAxis[0].max;
+}
+
+// Function to swtich the display to raster plot
+function seriesPlot() {
+	var MF=MEGFIFF;
+	MF.plotType='raster';
+	MEG_data=slice2d(finalData,MF.indDis);
+	GFP(MEG_data);
+	MEG_data=displayOperations();
+	try{chart.destroy();}catch(err){};
+	plotData_highChart(MEG_data);
+	extremesPlot();
+}
+
+function topoInit() {
+	var MF=MEGFIFF;
+	clearTopo ();
+	if(isEmpty(MF.currentTime)) {alert('No time instant selected. Please select a time instant');return;}
+		var sampleNum=Math.round(MF.currentTime*MF.sfreq); 
+		var canvas1=document.getElementById('canvas1');
+		if (canvas1.getContext) {
+			$('div#topoDlg').dialog('open');
+			MF.dispTopo=true;
+			var ctx=canvas1.getContext("2d");
+			ctx.fillStyle="rgb(0,0,0)";
+			var mul=4;
+			var heatmap=h337.create({"element":document.getElementById("heatmapArea"), "radius":40, "visible":true,"gradient": { 0: "rgb(0,0,255)", 0.55: "rgb(0,255,255)", 0.65: "rgb(0,255,0)", 0.95: "yellow", 1.0: "rgb(255,0,0)" },legend:{position:'br',title:' '}});
+			normTopo();
+			var chan=0;
+			for (var i=0;i<MF.chNames.length;i++) {
+				if (MF.goodCh[i]==1) {
+					ctx.beginPath();
+					var x=(MF.chanLocs[i][0]*1000*mul)+250;
+					var y=(MF.chanLocs[i][1]*1000*mul)+250;
+					ctx.arc(x,y,3,0,Math.PI*2, true);
+					ctx.fill();
+					ctx.fillText(MF.chNames[i].substr(4), x-2, y-2);
+					heatmap.store.addDataPoint(x,y,MF.topoVal[chan]);
+					chan++;
+				}
+			}
+		}
+    }
+
+function normTopo() {
+	var MF=MEGFIFF;
+	var sampleNum=Math.round((MF.currentTime-MF.prestim)*MF.sfreq);
+	MF.topoVal=[];
+	var chan=0;
+	for (var i=0;i<MF.chNames.length;i++) {
+		if (MF.goodCh[i]==1) {
+			MF.topoVal[chan]=finalData[i][sampleNum];
+			chan++;
+		}
+	}
+	var combo=absMax(MF.topoVal,0,0);
+	for (var i=0;i<MF.chNames.length;i++) MF.topoVal[chan]=MF.topoVal[chan]-combo[0];
+	var combo=absMax(MF.topoVal,0,1);
+	var maxTop=combo[0]
+	MF.topoVal=normalizeArray(MF.topoVal, maxTop);
+}
+
+function topoPlot() {
+	var MF=MEGFIFF;
+	$("#heatmapArea").empty();
+	var heatmap=h337.create({"element":document.getElementById("heatmapArea"), "radius":40, "visible":true,"gradient": { 0: "rgb(0,0,255)", 0.55: "rgb(0,255,255)", 0.65: "rgb(0,255,0)", 0.95: "yellow", 1.0: "rgb(255,0,0)" },legend:{position:'br',title:' '}}), x, y;
+	normTopo();
+	var chan=0;
+	var mul=4;
+	for (var i=0;i<MF.chNames.length;i++) {
+		if (MF.goodCh[i]==1) {
+			x=(MF.chanLocs[i][0]*1000*mul)+250;
+			y=(MF.chanLocs[i][1]*1000*mul)+250;
+			try {
+				heatmap.store.addDataPoint(x,y,MF.topoVal[chan]);
+				chan++;
+			}
+			catch(e){
+				topoPlot();
+			}
+		
+		}
+	}
+}
+
+function clearTopo () {
+	var clearTopo1=document.getElementById('canvas1'), ctx2=clearTopo1.getContext("2d");
+	ctx2.clearRect(0,0,600,600);
+	$("#heatmapArea").empty();
+	var heatmap=h337.create({"element":document.getElementById("heatmapArea"), "radius":40, "visible":true,legend:{position:'br',title:' '}});
+}
+
+function GFP(val) {
+	var MF=MEGFIFF;
+	var GFP=new Float64Array(val[0].length),numCh=val.length,numS=val[0].length;
+	for (var i=0;i<numS;i++) {
+		for (var j=0;j<numCh;j++) GFP[i]=GFP[i]+val[j][i]*val[j][i];
+		GFP[i]=Math.sqrt(GFP[i]);
+	}
+	MF.GFP=GFP;
+}
+
+/*function interp2d(Pts,jmP) {
+	var distJmp=[];
+	var interpPts=[];
+	var index=0;
+	var m=[];
+	var c=[];
+	for (var i=0;i < Pts.length;i++){
+		for (var j=i+1;j < Pts.length;j++){
+			
+			distJmp= (Pts[i][0] - Pts[j][0])/jmP;
+			m=(Pts[j][1] - Pts[i][1])/(Pts[j][0] - Pts[i][0]);
+			c= Pts[j][1] - m*Pts[j][0];
+			for (var k=1;k < jmP;k++){
+			    interpPts.push(new Array());
+				interpPts[index][0]=Pts[j][0] + distJmp*k;
+				interpPts[index][1]=m*interpPts[index][0] + c;
+				index++;
+			}
+		}
+	}
+	return interpPts;
+}*/
+	

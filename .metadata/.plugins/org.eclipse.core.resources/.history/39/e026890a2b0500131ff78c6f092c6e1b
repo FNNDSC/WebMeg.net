@@ -1,0 +1,452 @@
+/* Function to plot the data using highcharts
+ */
+
+function plotData_highChart (values) {	
+	if (MEGFIFF.plotType == 'butterfly') {
+		plotData_highChartButter(values);
+		return;
+	}
+		
+	var line, cloneToolTip;
+	MEGFIFF.currentTime = [];
+	// Create the chart
+	chart = new Highcharts.StockChart({
+		chart : {
+		animation : false,
+		renderTo : 'container',
+        events: {
+			// Function that creates a crosshair and tooltip onclick
+            click: function() {
+                if (line) {
+                    line.destroy(); // Destroy if a line exists
+                }
+                // Create a line
+                line = this.renderer.path(this.tooltip.crosshairs[0].d.split(" ")).attr({
+                    'stroke-width': 2,
+                    stroke: 'red'
+                }).add();
+                
+                if (cloneToolTip) {
+                	chart.container.firstChild.removeChild(cloneToolTip); // Destroy if toolTip exists
+                }
+                cloneToolTip = chart.tooltip.label.element.cloneNode(true); // Create a tooltip
+                chart.container.firstChild.appendChild(cloneToolTip);
+                // Get the time on the cursor
+                MEGFIFF.currentTime = parseFloat(cloneToolTip.getElementsByTagName('tspan')[0].childNodes[0].data.match("[0-9.-]+"));
+                if (MEGFIFF.dispTopo) topoPlot();
+            }
+	
+        },
+        
+		width: MEGFIFF.width, // Chart Width
+        height: MEGFIFF.height, // Chart Height
+		spacingLeft: 50, // Space between left margin and the data
+		borderColor: '#EBBA95', // Color of border around chart
+		borderWidth: 3, // Width of corder
+		borderRadius: 10, // Radius of the corner
+		zoomType: 'xy', // Zoom in both X and Y
+		
+	},
+		
+	scrollbar: {
+	    enabled: true,
+	    liveRedraw:false,
+	    barBackgroundColor: 'gray',
+		barBorderRadius: 7,
+		barBorderWidth: 0,
+		buttonBackgroundColor: 'gray',
+		buttonBorderWidth: 0,
+		buttonBorderRadius: 7,
+		trackBackgroundColor: 'none',
+		trackBorderWidth: 1,
+		trackBorderRadius: 8,
+		trackBorderColor: '#CCC'
+	},
+	    
+	plotOptions: {
+		series: {
+			animation : false,
+			cursor: 'pointer',
+			point: {
+				events: {
+					// Function that highlights the color of series On click
+					click: function() {
+							if (this.series.color == '#1E90FF') { // Blue
+								MEGFIFF.userSelection.push(this.series.index);
+								this.series.color = "#FF0000"; // Red
+								MEGFIFF.colors[this.series.index] = "#FF0000"; 
+								this.series.graph.attr({ stroke: '#FF0000' });
+							}
+							else {
+								this.series.color = "#1E90FF";
+								MEGFIFF.colors[this.series.index] = "#1E90FF";
+								this.series.graph.attr({ stroke: '#1E90FF' });
+								MEGFIFF.userSelection.splice(MEGFIFF.userSelection.indexOf(this.series.index),1);
+							}
+						}
+					}
+				},
+			}
+		},
+		
+	// Navigator disabled for speed
+		navigator: {
+			series: {
+			color: 'green',
+			},
+			xAxis : {
+				tickPositioner: function(min, max) {
+				var pos = 0,
+				tickPositions = [],
+				tickEnd = values[0].length;
+				var sfreq = MEGFIFF.sfreq;
+				var jmp = sfreq*10;
+
+				for (pos = 0; pos <= tickEnd; pos = pos + jmp) {
+					if(pos > min) {
+						tickPositions.push(pos);
+					}
+				}
+			return tickPositions;
+			},
+
+			tickWidth: 3,
+			tickPosition: 'inside',
+			labels : {
+				formatter : function() {	    		
+				return ((this.value+MEGFIFF.startPlotTime*MEGFIFF.sfreq)/MEGFIFF.sfreq).toFixed(1);
+				}
+			},
+			gridLineWidth: 2
+			},
+		},
+	
+    rangeSelector: {
+    	buttonTheme: { // styles for the buttons
+    		fill: 'none',
+    		stroke: 'none',
+    		'stroke-width': 0,
+    		r: 8,
+    		style: {
+    			color: '#039',
+    			fontWeight: 'bold'
+    		},
+    		states: {
+    			hover: {
+    			},
+    			select: {
+    				fill: '#039',
+    				style: {
+    					color: 'white'
+    				}
+    			}
+    		}
+    	},
+    	buttons: [{
+    		type: 'second',
+    		count: 5*MEGFIFF.sfreq/1000,
+    		text: '5s'
+    	}, {
+    		type: 'second',
+    		count: 10*MEGFIFF.sfreq/1000,
+    		text: '10s'
+    	}, {
+    		type: 'second',
+    		count: 30*MEGFIFF.sfreq/1000,
+    		text: '30s'
+    	}, {
+    		type: 'second',
+    		count: 60*MEGFIFF.sfreq/1000,
+    		text : '1m'
+    	}],
+    	inputStyle: {
+    		color: '#039',
+    		fontWeight: 'bold'
+    	},
+    	labelStyle: {
+    		color: 'silver',
+    		fontWeight: 'bold'
+    	},
+    	selected: 1,
+    	inputEnabled:false
+
+    },
+
+	title : {
+		text : 'File name : ' + MEGFIFF.fileName + '; Total Length : ' + Math.round(MEGFIFF.dataLength) + ' sec' + '; Sampling rate : ' + MEGFIFF.sfreq + ' Hz'
+	},
+	
+	xAxis : {
+			tickPositioner: function(min, max) {
+				var pos = 0,
+				tickPositions = [],
+				tickEnd = values[0].length;
+				var sfreq = MEGFIFF.sfreq;
+				var jmp = sfreq/2;
+		
+				for (pos = 0; pos <= tickEnd; pos = pos + jmp) {
+					if(pos > min) {
+						tickPositions.push(pos);
+					}
+				}
+			return tickPositions;
+		    },
+		    tickColor: 'green',
+	    	tickLength: 10,
+	    	tickWidth: 3,
+	    	tickPosition: 'inside',
+		    labels : {
+		    	formatter : function() {	    		
+		    		return ((this.value+MEGFIFF.startPlotTime*MEGFIFF.sfreq)/MEGFIFF.sfreq).toFixed(1);
+				}
+		    },
+		   // gridLineWidth: 2,
+		    title : {
+		    	text : 'Time in seconds'
+		    },
+	},
+
+	yAxis : {
+		
+		tickInterval : 1,
+		gridLineWidth: 2,	
+		tickPositioner : function(min, max) {
+			var ticked = [-1];
+			for (var i = 0;i <= values.length + 2;i++) {
+				ticked[i + 1] = i;
+			}
+			return ticked;
+		},
+		
+		labels : {
+			x : -50,
+			y:5,
+			
+			formatter : function () {
+				if (this.value >= 0 && this.value < values.length) {
+					return MEGFIFF.chNames[this.value]
+				}
+				else return ""
+			},	
+		},
+		
+		title : {
+			text : 'Channels',
+			x : -45
+		}
+	},
+	
+	series : (function(){
+        var d = new Array();
+        for (var i = 0; i < MEGFIFF.numChannels; i++){
+         d.push({ data : values[i], animation : false, color : MEGFIFF.colors[i], visible : MEGFIFF.visible[i]});
+        }
+        
+		if (MEGFIFF.numEvent != 0) {
+			for (var i = 0;i < MEGFIFF.numEvent;i++) {
+				for (var j = 0;j < MEGFIFF.eventTimes[i].length;j++) {
+						d.push({type : 'flags',data:[{x : (MEGFIFF.eventTimes[i][j] - MEGFIFF.startPlotTime)*MEGFIFF.sfreq,title : MEGFIFF.eventNames[i]}],shape:'squarepin',states:{hover:{fillColor:'#395C84'}},y:-chart.plotHeight,color:'red',lineWidth:2},false);
+					
+				}
+			}
+		}
+        return d;
+    })(),
+    
+	tooltip : {
+		enabled : true,
+		shared : false,
+		animation : false,
+		
+		formatter: function(){return 'Time : ' + parseInt(((MEGFIFF.startPlotTime * MEGFIFF.sfreq + this.x) / MEGFIFF.sfreq) * 1000)/1000 + 's';},
+		
+        crosshairs: {
+            width: 2,
+            color: 'green',
+            dashStyle: 'shortdot'
+        },
+        
+        positioner: function () {
+        	return { x: window.event.clientX - 75, y: 10 };
+        }
+	}
+
+   });
+}
+
+function plotData_highChartButter(values) {
+	var line, cloneToolTip;
+	MEGFIFF.currentTime = [];
+	// Create the chart
+	chart = new Highcharts.StockChart({
+		chart : {
+		animation : false,
+		renderTo : 'container',
+        events: {
+			// Function that creates a crosshair and tooltip onclick
+            click: function() {
+                if (line) {
+                    line.destroy(); // Destroy if a line exists
+                }
+                // Create a line
+                line = this.renderer.path(this.tooltip.crosshairs[0].d.split(" ")).attr({
+                    'stroke-width': 2,
+                    stroke: 'red'
+                }).add();
+                
+                if (cloneToolTip) {
+                	chart.container.firstChild.removeChild(cloneToolTip); // Destroy if toolTip exists
+                }
+                cloneToolTip = chart.tooltip.label.element.cloneNode(true); // Create a tooltip
+                chart.container.firstChild.appendChild(cloneToolTip);
+                // Get the time on the cursor
+                MEGFIFF.currentTime = parseFloat(cloneToolTip.getElementsByTagName('tspan')[0].childNodes[0].data.match(/\d+\.?\d*/g));
+            }
+	
+        },
+        
+		width: MEGFIFF.width, // Chart Width
+        height: MEGFIFF.height, // Chart Height
+		spacingLeft: 50, // Space between left margin and the data
+		borderColor: '#EBBA95', // Color of border around chart
+		borderWidth: 3, // Width of corder
+		borderRadius: 10, // Radius of the corner
+		zoomType: 'xy', // Zoom in both X and Y	
+	},
+		
+	scrollbar: {
+	    enabled: false
+	},
+	    
+	plotOptions: {
+		series: {
+			animation : false,
+			cursor: 'pointer',
+			point: {
+				events: {
+					// Function that highlights the color of series On click
+					click: function() {
+							if (this.series.color == '#1E90FF') { // Blue
+								MEGFIFF.userSelection.push(this.series.index);
+								this.series.color = "#FF0000"; // Red
+								MEGFIFF.colors[this.series.index] = "#FF0000"; 
+								this.series.graph.attr({ stroke: '#FF0000' });
+							}
+							else {
+								this.series.color = "#1E90FF";
+								MEGFIFF.colors[this.series.index] = "#1E90FF";
+								this.series.graph.attr({ stroke: '#1E90FF' });
+								MEGFIFF.userSelection.splice(MEGFIFF.userSelection.indexOf(this.series.index),1);
+							}
+							/*if (line) {
+			                    line.destroy();
+			                }
+			                line = chart.renderer.path(chart.tooltip.crosshairs[0].d.split(" ")).attr({
+			                    'stroke-width': 2,
+			                    stroke: 'red'
+			                }).add();
+			                if (cloneToolTip) {
+			                	chart.container.firstChild.removeChild(cloneToolTip);
+                            }
+                            cloneToolTip = this.series.chart.tooltip.label.element.cloneNode(true);
+                            chart.container.firstChild.appendChild(cloneToolTip);*/
+						}
+					}
+				},
+			}
+		},
+		
+	// Navigator disabled for speed
+	navigator: {
+        enabled: false,   
+	},
+	
+    navigation: {
+        buttonOptions: {
+            verticalAlign: 'bottom',
+            y: -20
+        }
+    },
+	
+	rangeSelector : {
+		enabled : false
+	},
+
+	title : {
+		text : 'File name : ' + MEGFIFF.fileName + '; Total Length : ' + Math.round(MEGFIFF.dataLength) + ' sec' + '; Sampling rate : ' + MEGFIFF.sfreq + ' Hz'
+	},
+	
+	xAxis : {
+
+			tickPositioner: function(min, max) {
+				var pos = 0,
+				tickPositions = [],
+				tickStart = 0;
+				tickEnd = MEGFIFF.displayDuration * MEGFIFF.sfreq;
+		
+				for (pos = tickStart; pos <= 20; pos++) {
+					tickPositions.push(pos*tickEnd/20);
+				}
+			return tickPositions;
+		    },
+
+		    labels : {
+		    	formatter : function() {	    		
+		    		return ((this.value + MEGFIFF.startPlotTime * MEGFIFF.sfreq)  / MEGFIFF.sfreq).toFixed(3);
+				}
+		    },
+		    gridLineWidth: 2,
+		    title : {
+		    	text : 'Time in seconds'
+		    }
+	},
+
+	yAxis : {
+		gridLineWidth: 2,
+		min : MEGFIFF.minRaster,
+		max : MEGFIFF.maxRaster,
+		title : {
+			text : 'Amplitude',
+			x : -45
+		}
+	},
+	
+	series : (function(){
+        var d = new Array();
+        for (var i = 0; i < MEGFIFF.numChannels; i++){
+         d.push({ data : values[i], animation : false, color : MEGFIFF.colors[i], visible : MEGFIFF.visible[i]});
+        }
+        
+		if (MEGFIFF.numEvent != 0) {
+			for (var i = 0;i < MEGFIFF.numEvent;i++) {
+				for (var j = 0;j < MEGFIFF.eventTimes[i].length;j++) {
+					if (MEGFIFF.eventTimes[i][j] >= MEGFIFF.startPlotTime && MEGFIFF.eventTimes[i][j] < MEGFIFF.endPlotTime) {
+						d.push({type : 'flags',data:[{x : (MEGFIFF.eventTimes[i][j] - MEGFIFF.startPlotTime)*MEGFIFF.sfreq,title : MEGFIFF.eventNames[i]}],shape:'squarepin',states:{hover:{fillColor:'#395C84'}},y:-chart.plotHeight,lineColor:'red'},false);
+					}
+				}
+			}
+		}
+        return d;
+    })(),
+    
+	tooltip : {
+		enabled : true,
+		shared : false,
+		animation : false,
+		
+		formatter: function(){return 'Time : ' + parseInt(((MEGFIFF.startPlotTime * MEGFIFF.sfreq + this.x) / MEGFIFF.sfreq) * 1000)/1000 + 's';},
+		
+        crosshairs: {
+            width: 2,
+            color: 'green',
+            dashStyle: 'shortdot'
+        },
+        
+        positioner: function () {
+        	return { x: window.event.clientX - 75, y: 10 };
+        }
+	}
+
+   });
+	
+}

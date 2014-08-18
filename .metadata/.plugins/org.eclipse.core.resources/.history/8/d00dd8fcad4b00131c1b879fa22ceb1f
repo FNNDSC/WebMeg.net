@@ -1,0 +1,228 @@
+<html>
+<head>
+<title>WebMEG</title>
+<script type="text/javascript" src="js/dragndrop.js"></script>
+<script type="text/javascript" src="js/load.js"></script>
+<script type="text/javascript" src="js/parse.js"></script>
+<script type="text/javascript" src="js/arrayFunctions.js"></script>
+<script type="text/javascript" src="js/formatReaders/fiffReader.js"></script>
+<script type="text/javascript" src="js/formatReaders/edfReader.js"></script>
+<script type="text/javascript" src="js/plotData_highChart.js"></script>
+<script type="text/javascript" src="js/chartInitialize.js"></script>
+<script type="text/javascript" src="js/preProcess.js"></script>
+<script type="text/javascript" src="js/eventFunctions.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="js/highstock.js"></script>
+<script type="text/javascript" src="js/exporting.js"></script>
+<script type="text/javascript" src="js/avgFunctions.js"></script>
+<script type="text/javascript" src="js/displayOperations.js"></script>
+<script type="text/javascript" src="js/fltData.js"></script>
+<script type="text/javascript" src="js/macros.js"></script>
+<script type="text/javascript" src="js/menu/jquery.js"></script>
+<script type="text/javascript" src="js/heatmap.js"></script>
+<script type="text/javascript" src="js/fft.js"></script>
+<script type="text/javascript" src="js/menu/menu.js"></script>
+
+
+<link rel="stylesheet" type="text/css" href="css/style.css"/>
+<link type="text/css" href="css/menu.css" rel="stylesheet" />
+<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.0/themes/ui-lightness/jquery-ui.css" />
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.min.js" type="text/javascript"></script>
+
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+* { margin:0;
+    padding:0;
+}
+body { background:rgb(74,81,85); }
+div#menu { margin:1px auto; }
+</style>
+
+<div id="menu">
+    <ul class="menu">
+    
+        <li id="File"><a href="#" class="parent"><span>File</span></a>
+            <ul>
+                <li><a href="#"><span> <input type="file" id="fileSelector" style="display: none;"/>
+                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('fileSelector').click();">Load file for display</span></span></a></li>
+                
+                <li><a href="#"><span> <input type="file" id="eventSelector" name="file" style="display: none;">
+                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('eventSelector').click();">Load events csv/txt</span></span></a></li>
+                
+                <li><a href="#"><span> <input type="file" id="macSelector" name="file" style="display: none;">
+                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('macSelector').click();">Load macro</span></span></a></li>
+                
+  				<li><a href="#"><span onclick="javascript:saveEvents()">Save events in csv/txt</span></a></li>
+  				<li><a href="#"><span onclick="javascript:saveMac()">Save macro</span></a></li>
+            </ul>
+        </li>
+        
+         <li id="preproc"><a href="#" class="parent"><span>Pre-process</span></a>
+            <ul>
+            	<li><a href="#"><span onclick="javascript:filter()">Filter</span></a></li>
+            	<li><a href="#"><span onclick="javascript:dwnSmp()">Downsample Data</span></a></li>
+            	<li><a href="#"><span onclick="javascript:chSlt()">Channel Selection</span></a></li>
+            	<li><a href="#"><span onclick="javascript:mtgSlt()">Custom Montage Selection</span></a></li>
+            </ul>
+        </li>
+        
+        <li id="eventAddGroup"><a href="#" class="parent"><span>Events</span></a>
+            <ul>
+            	<li><a href="#"><span onclick="javascript:addEventGroup(this)">Create Event Group <p style="text-align:right;float:right">  Ctrl + r </p> </span></a></li>
+            	<li><a href="#"><span onclick="javascript:addEvent(false)">Mark New Event <p style="text-align:right;float:right">  Ctrl + e </p> </span></a></li>
+            	<li><a href="#"><span onclick="javascript:deleteEventGroup()">Delete Group <p style="text-align:right;float:right"> Ctrl + f </p> </span></a></li>
+            	<li><a href="#"><span onclick="javascript:deleteEvent()">Delete Event <p style="text-align:right;float:right"> Ctrl + d </p></span></a></li>
+            	<li><a href="#"><span onclick="javascript:addDelay()">Adjust delay</span></a></li>
+            	<li><a href="#"><span onclick="javascript:setTrgParam()">Detect from trigger line </span></a></li>
+            </ul>
+        </li>
+        
+        <li><a href="#" class="parent"><span>Display</span></a>
+            <ul>
+                <li><a href="#"><span>Plot type</span></a></li>
+                <li><a href="#"><span onclick="javascript:changeDuration()">Display duration</span></a></li>
+                <li><a href="#"><span onclick="javascript:avgParams()">Average data</span></a></li>
+                <li><a href="#"><span onclick="javascript:topoInit()">Plot Topography</span></a></li>
+            </ul>
+        </li>
+        
+        <li><a href="#" class="parent"><span>Help</span></a>
+        	<ul>
+                <li><a href="https://www.dropbox.com/sh/d5sr68bsedgvtwi/z2g1JIh1Y8" target="_blank"><span>Download Sample Data</span></a></li>
+                <li><a href="https://www.github.com/FNNDSC/WebMeg.net" target="_blank"><span>How to use WebMEG</span></a></li>
+            </ul>
+        </li>
+    </ul>
+</div>
+
+<div id="avgDialog" title="Average data" style="font-size:10pt" size="10">
+    <p><span style="font-size:10pt" size="10">Pre-stimulus in ms</span></p>
+    <p><input id="prestim" name="username" value="-200" type="text" autocomplete="off" style="font-size:10pt" size="10"></p>
+    <p><span style="font-size:10pt" size="10">Post-stimulus in ms</span></p>
+    <p><input id="poststim" name="password" value="500" type="text" autocomplete="off" style="font-size:10pt" size="10"></p>
+    <p><center><button id="avgSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt" onclick="javascript:startAvg()">Ok</button></center></p>
+</div>
+
+<div id="topoDlg" title="Topography" style="font-size:10pt" size="10">
+	<canvas id="canvas1" width="500" height="600" z-index="-1"></canvas>
+	<div id="heatmapArea" style="width:500px;height:500px;"></div>
+</div>
+
+<div id="evtDlg" title="Detect Events from Trigger Line" style="font-size:10pt" size="10">
+	<p><label>Trigger Line 1 : </label><input type="checkbox" name="trg1"> <select id="chList1"></select></p>
+	<br/>
+	<p><label>Trigger Line 2 : </label><input type="checkbox" name="trg2"> <select id="chList2"></select></p>
+	<br/>
+    <p><label for="thres">Threshold: </label> <input type="text" name="thresVal" size="5" value="0.5"></p>
+    <br/>
+    <p><center><button id="evtSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="javascript:evtDetect()">Ok</button></center></p>
+    <br/>
+</div>
+
+<div id="chDlg" title="Select channels" style="font-size:12pt" size="10">
+<p><select id="chList" name="chList" size="5" multiple="multiple" style="width:150px; height:500px"></p>
+</select>   
+<br/>
+<br/>
+<p><center><button id="chSubmit" type="button" style="height: 25px; width:100px;font-size:12pt" onclick="javascript:chSub()">Ok</button></center></p>                              
+</div>
+
+
+<div id="fltDlg" title="Filter properties" style="font-size: 10pt">
+	<form name="fltform">
+	<br>	
+	<label for="lowactive"> Low Cutoff frequency (Hz)</label>
+	<input type="checkbox" name="lochk"> 
+	<input type="text" name="locut" size="5"value="1"> 
+	<p>
+	<br/>
+	
+	
+	<label for="highactive">High Cutoff frequency (Hz)</label>
+	<input type="checkbox" name="hichk"> 
+	<input type="text" name="hicut" size="5" value="100">
+	<p>
+	<br/>
+	
+	<label for="notchactive">Notch filter</label>
+	<input type="checkbox" name="notchchk"> 
+	<input type="text" name="notchval" size="5" value="60">
+	<p>
+	<br/>
+
+	<label for="samplerate">Sample rate: </label> 
+	<input type="text" name="srate" size="5" readonly=true value='' style="background-color:rgb(211,211,211);">
+	<p>
+	<br/>
+	<center><button id="fltSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="javascript:fltStart()">Ok</button></center></p>
+	
+	</form>
+	<br/>
+</div>
+
+
+<div style="visibility: hidden" id="copyright">Copyright &copy; 2013 <a href="http://apycom.com/">Apycom jQuery Menus</a></div>
+<script>
+window.onload=function() {
+$('div#avgDialog').dialog({ autoOpen:false })
+$('div#fltDlg').dialog({autoOpen:false,width:800, height:700})
+$('div#topoDlg').dialog({autoOpen:false,width:600, height:600,close:function() {clearTopo();MEGFIFF.dispTopo=false;}})
+$('div#evtDlg').dialog({autoOpen:false,width:232, height:195,open:function (event, ui) {$('#evtDlg').css('overflow', 'hidden');}})
+$('div#chDlg').dialog({autoOpen:false,width:190, height:620, top:100 ,open: function (event, ui) {$('#chDlg').css('overflow', 'hidden');}})
+
+if (localStorage.avg) {
+	$('#drop_zone').css('opacity',0);
+	$('#drop_zone').css('z-index',-1);
+	plotData_highChart(MEG_data);
+	localStorage.removeItem('avg');
+}
+else {
+  // do something when the page is fully loaded
+  // initialize dragndrop
+  initialize_dragndrop();
+ }
+  
+  };
+
+</script>
+
+<script type="text/javascript">
+// Update tracking information of the website
+  var _gaq=_gaq || [];
+  _gaq.push(['_setAccount', 'UA-39084119-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga=document.createElement('script'); ga.type='text/javascript'; ga.async=true;
+    ga.src=('https:'==document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s=document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+ 
+</head>
+
+<body>
+<!-- The dropzone -->
+<div id="drop_zone">Drop the MEG\EEG file here to display or select from the file menu</div>
+<div id="nondrop_zone"></div>
+<div id="container" style="height: 1px; min-width: 1px"></div>
+</body>
+
+</html>

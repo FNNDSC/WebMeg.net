@@ -1,55 +1,48 @@
 /* Function to initialize parameters for plotting
  */
 function chartInitialize(numChannels, sfreq, chNames) {
+	var MF=MEGFIFF;
+
 	// Set initial parameters for plotting
-	MEGFIFF.sfreq = sfreq;
-	MEGFIFF.startPlotTime = 0; // In seconds
-	MEGFIFF.endPlotTime = 10; // In seconds
-	MEGFIFF.displayDuration = 10;
-	MEGFIFF.numChannels = numChannels;
-	MEGFIFF.dataLength = finalData[0].length/sfreq;
-	MEGFIFF.numBadChannels = [];
-	MEGFIFF.badChannels = [];
-	for (var i = 0;i < chNames.length;i++){
-		MEGFIFF.badChannels[i] = 0
-	}
+	MF.sfreq=sfreq;
+	MF.startPlot=0;
+	MF.endPlot=10*sfreq;
+	MF.dataLength=finalData[0].length/sfreq;
 	
-	MEGFIFF.chNames = chNames;
-	MEGFIFF.firstGood = []; // Index of first good channel
-	MEGFIFF.userSelection = []; // Stores series selected by the user
+	MF.chNames=new Array();
+	for (var i=0;i<MF.numCh;i++) MF.chNames[i]=chNames[i];
 	
-	MEGFIFF.visible = [];
-	for (var i = 0;i < MEGFIFF.numChannels;i++) {
-		MEGFIFF.visible[i] = true;
-	}
-	MEGFIFF.colors = []; // Colors to be used for plotting
-	for (var i = 0;i < MEGFIFF.numChannels;i++) {
-		MEGFIFF.colors[i] = '#1E90FF';
-	}
+	MF.userSelection=[]; // Stores series selected by the user
 	
-	MEGFIFF.goodChannels = [];
-	for (var i = 0;i < MEGFIFF.numChannels;i++) {
-		MEGFIFF.goodChannels[i] = 1;
-	}
+	MF.visible=[];
+	for (var i=0;i<MF.numCh;i++) MF.visible[i]=true;
 	
-	MEGFIFF.width = this.window.innerWidth * 1;
-	MEGFIFF.height = this.window.innerHeight * 0.9;
+	MF.colors = []; // Colors to be used for plotting
+	for (var i=0;i<MF.numCh;i++) MF.colors[i]='#1E90FF';
 	
-	MEGFIFF.numEvent = 0; // Number of different events
-	MEGFIFF.eventNames = [];
-	MEGFIFF.currentEventGroup = [];
-	MEGFIFF.currentEvent = [];
-	MEGFIFF.eventTimes = new Array();
-	MEGFIFF.eventIdGroup = new Array();
-	MEGFIFF.plotType = 'butterfly';
-	MEGFIFF.LA = false;
-	MEGFIFF.HA = false;
-	MEGFIFF.BPA = false;
-	MEGFIFF.BRA = false;
-	MEGFIFF.LP = [];
-	MEGFIFF.HP = [];
-	MEGFIFF.BP = [];
-	MEGFIFF.BR = [];
-	MEGFIFF.dispTopo = false;
-	MEGFIFF.numTopoPoints = 5;
+	MF.goodCh=[];
+	for (var i=0;i<MF.numCh;i++) MF.goodCh[i]=1;
+	
+	MF.indDis=[];
+	for (var i=0;i<chNames.length;i++) MF.indDis[i]=-1;
+	for (var i=0;i<MF.numCh;i++) MF.indDis[i]=i;
+
+	MF.width=this.window.innerWidth*1;
+	MF.height=this.window.innerHeight*0.9;
+	
+	MF.numEvent=0; // Number of different events
+	MF.eventNames=[];
+	MF.currentEventGroup=[];
+	MF.currentEvent=[];
+	MF.eventTimes=new Array();
+	MF.eventIdGroup=new Array();
+	MF.plotType='butterfly';
+	MF.dispTopo=false;
+	MF.numTopoPoints=5;
+	MF.scale=1;
+	MF.chSlt=0;
+	MF.butterAmp=0;
+	MF.strTick=0;
+	MF.avgDis=false;
+	MF.prestim=0;
 }

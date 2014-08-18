@@ -1,98 +1,97 @@
 function load_files(filelist) {
-$('#drop_zone').css('opacity',0);
-$('#drop_zone').css('z-index',-1);
+	var MF=MEGFIFF;
+	$('#drop_zone')[0].textContent = 'Loading...';
+	//$('#drop_zone').css('z-index',-1);
 	// call the load function with the file list
-	var _number_of_files = filelist.length;
-	for ( var i = 0; i < _number_of_files; i++) {
+	var _number_of_files=filelist.length;
+	for ( var i=0; i<_number_of_files; i++) {
 		// Check if valid format is provided
-		var fileExtension = filelist[i].name.split('.').pop();
+		var fileExtension=filelist[i].name.split('.').pop();
 		if (fileExtension != "fif" && fileExtension != "edf") {
 			alert(fileExtension + ' is not currently supported!!!\n Supported file formats include *_raw.fiff and *.edf');
 			return;
 		}
-		MEGFIFF = [];
-		MEGFIFF.fileName = filelist[0].name;
-		MEGFIFF.fileType = fileExtension;
-		var reader = new FileReader();
-		reader.onerror = errorHandler;
-		reader.onload = loadHandler(filelist[i]);
+		MF.fileName=filelist[0].name;
+		MF.disName=filelist[0].name;
+		MF.fileType=fileExtension;
+		var reader=new FileReader();
+		reader.onerror=errorHandler;
+		reader.onload=loadHandler(filelist[i]);
 		// start reading this file
 		reader.readAsArrayBuffer(filelist[i]);
+		
 	}
-
 }
 
-//
 // the HTML5 File Reader callbacks
-//
 
 // setup callback for errors during reading
-var errorHandler = function(e) {
-
+var errorHandler=function(e) {
 	console.log('Error:' + e.target.error.code);
-
 };
-
 // setup callback after reading
-var loadHandler = function(file) {
+var loadHandler=function(file) {
 
 	return function(e) {
 
+		var MF=MEGFIFF;
 		// reading complete
-		var _data = e.target.result;
+		var _data=e.target.result;
 		// all done, start the parsing
-		//var w = new Worker(displayGif.js);
-		var combo = parse(_data);
-		data_info = combo[0];
-		finalData = combo[1];
+		var combo=parse(_data);
 		
-		if (MEGFIFF.fileType == 'fif') {
-		
-		// get the info and the data
-		time = combo[2];
-		var chs = new Array();
-		for (var i = 0;i < 74;i++) {
-			chs[i] = data_info.info.chs[i].ch_name;
-		}
-		
-		// Initialize plotting parameters
-		chartInitialize(74, data_info.info.sfreq,chs);
-		// Slice data to the required data to be plotted
-		MEGFIFF.allChs = [];
-		for (var i = 0;i < data_info.info.chs.length;i++) {
-			MEGFIFF.allChs[i] = data_info.info.chs[i].ch_name;
-		}
-		MEGFIFF.plotType = 'raster';
-		MEG_data = finalData.slice(0,MEGFIFF.numChannels);
-		MEG_data1 = dataSlicing(MEG_data,MEGFIFF.startPlotTime,MEGFIFF.endPlotTime,MEGFIFF.sfreq);
-		var maxValue = absMax(MEG_data1,1);
-		MEGFIFF.scale = Math.pow(10,Math.floor(Math.log(maxValue)/Math.log(10))) / (1e-11);
-		MEGFIFF.finalScale = MEGFIFF.scale;
-		// Scale data for proper display
-		MEG_data1 = displayOperations();
-		// Plot the data
-		plotData_highChart(MEG_data1);
-		
-		MEGFIFF.chanLocs = [];
-		for (var i = 0;i < MEGFIFF.chNames.length;i++) {
-			MEGFIFF.chanLocs.push(new Array());
-			MEGFIFF.chanLocs[i][0] = data_info.info.chs[i].loc[0];
-			MEGFIFF.chanLocs[i][1] = data_info.info.chs[i].loc[1];
-			MEGFIFF.chanLocs[i][2] = data_info.info.chs[i].loc[2];
-		}
-	}
-		
-		else if(MEGFIFF.fileType == 'edf') {
-			chartInitialize(data_info.ns, data_info.samples[0],data_info.label);
-			MEGFIFF.allChs = [];
-			for (var i = 0;i < data_info.label.length;i++) {
-				MEGFIFF.allChs[i] = data_info.label[i];
+		data_info=combo[0];
+		finalData=combo[1];
+
+		if (MF.fileType=='fif') {
+			if(data_info.info.chs.length>=20) MF.numCh=20;
+			else MF.numCh=data_info.info.chs.length;
+			// get the info and the data
+			time=combo[2];
+			
+			// Slice data to the required data to be plotted
+			MF.allChs=[];
+			for (var i=0;i<data_info.info.chs.length;i++) MF.allChs[i]=data_info.info.chs[i].ch_name;
+
+			// Initialize plotting parameters
+			chartInitialize(MF.numCh, data_info.info.sfreq,MF.allChs.slice(0,MF.numCh));
+			
+			MF.plotType='raster';
+			MEG_data=slice2d(finalData,MF.indDis);
+			var combo=absMax(MEG_data,1,1);
+			var maxValue=combo[0];
+			//MF.scale=10*Math.pow(10,Math.floor(Math.log(maxValue)/Math.log(10)))/(1e-10);
+			MF.scale=1;
+			MF.finalScale=MF.scale;
+			// Scale data for proper display
+			MEG_data=displayOperations();
+			GFP(MEG_data);
+			// Plot the data
+			plotData_highChart(MEG_data);
+			MF.startPlot=0;
+			MF.endPlot=chart.rangeSelector.buttonOptions[chart.rangeSelector.selected].count*1000;
+			//chart.xAxis[0].setExtremes(MF.startPlot,MF.endPlot);
+
+			MF.subLoc=[];
+			for (var i=0;i<MF.chNames.length;i++) {
+				MF.subLoc.push(new Array());
+				MF.subLoc[i][0]=data_info.info.chs[i].loc[0];
+				MF.subLoc[i][1]=data_info.info.chs[i].loc[1];
+				MF.subLoc[i][2]=data_info.info.chs[i].loc[2];
 			}
-			MEGFIFF.scale = 1;
-			MEGFIFF.finalScale = MEGFIFF.scale;
+		}
+		else if(MF.fileType=='edf') {
+			if(data_info.label.length >=20) MF.numCh=20;
+			else MF.numCh = data_info.label.length;
+			chartInitialize(MF.numCh, data_info.samples[0],data_info.label);
+			MF.allChs=[];
+			for (var i=0;i<data_info.label.length;i++) MF.allChs[i]=data_info.label[i];
+			MF.scale=2;
+			MF.finalScale=MF.scale;
 			seriesPlot();
 		}
-		
+		MF.plot=true;
+		$('#drop_zone').css('opacity',0);
+		$('#drop_zone').css('z-index',-1);
 	};
-
 };

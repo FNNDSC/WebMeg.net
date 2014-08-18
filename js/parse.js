@@ -15,25 +15,22 @@ function parse(bytes) {
 		var index1;
 		var totalSamples = 0;
 	
-		for (var i = 0;i < totalSeg;i++) {
-			totalSamples = totalSamples + mixedData[i].length;
-		}
+		for (var i = 0;i < totalSeg;i++) totalSamples = totalSamples + mixedData[i].length;
+		
 		totalSamples = totalSamples/nchan;
 		var time=new Array(totalSamples);
 		for (var i = 0;i < totalSamples;i++) {
 			time[i]=i;
 		}
 	
-		for(var i = 0;i < nchan;i++) {
-			finalData[i] = new Array(totalSamples);	
-		}
+		for(var i=0;i<nchan;i++) finalData[i]=new Array(totalSamples);	
 	
-		for (var i = 0;i < totalSeg;i++) {
-			index1 = 0;
-			sampleSeg = mixedData[i].length/nchan;
-			for (var j = 0;j < sampleSeg;j++) {
-				for (var k = 0;k < nchan;k++) {
-					finalData[k][index] = mixedData[i][index1];
+		for (var i=0;i<totalSeg;i++) {
+			index1=0;
+			sampleSeg=mixedData[i].length/nchan;
+			for (var j=0;j<sampleSeg;j++) {
+				for (var k=0;k<nchan;k++) {
+					finalData[k][index]=mixedData[i][index1];
 					index1++
 				}
 				index++;
