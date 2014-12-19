@@ -25,7 +25,7 @@ function initialize_dragndrop() {
 	// Select event file
 	document.getElementById('eventSelector').addEventListener('change', loadEvents, false); 
 	
-	// Select event file
+	// Select macro file
 	document.getElementById('macSelector').addEventListener('change', macSelect, false);
 	
 	//on mousescroller
