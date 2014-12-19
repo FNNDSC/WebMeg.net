@@ -64,24 +64,24 @@ div#menu { margin:1px auto; }
         <li id="File"><a href="#" class="parent"><span>File</span></a>
             <ul>
                 <li><a href="#"><span> <input type="file" id="fileSelector" style="display: none;"/>
-                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('fileSelector').click();">Load file for display</span></span></a></li>
+                <span style="color: rgb(169, 169, 169);" onclick="$('#fileSelector').click();">Load file for display</span></span></a></li>
                 
                 <li><a href="#"><span> <input type="file" id="eventSelector" name="file" style="display: none;">
-                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('eventSelector').click();">Load events csv/txt</span></span></a></li>
+                <span style="color: rgb(169, 169, 169);" onclick="$('#eventSelector').click();">Load events csv/txt</span></span></a></li>
                 
                 <li><a href="#"><span> <input type="file" id="macSelector" name="file" style="display: none;">
-                <span style="color: rgb(169, 169, 169);" onclick="javascript:document.getElementById('macSelector').click();">Load macro</span></span></a></li>
+                <span style="color: rgb(169, 169, 169);" onclick="$('#macSelector').click();">Load macro</span></span></a></li>
                 
-  				<li><a href="#"><span onclick="javascript:saveEvents()">Save events in csv/txt</span></a></li>
-  				<li><a href="#"><span onclick="javascript:saveMac()">Save macro</span></a></li>
+  				<li><a href="#"><span onclick="saveEvents()">Save events in csv/txt</span></a></li>
+  				<li><a href="#"><span onclick="saveMac()">Save macro</span></a></li>
             </ul>
         </li>
         
          <li id="preproc"><a href="#" class="parent"><span>Pre-process</span></a>
             <ul>
-            	<li><a href="#"><span onclick="javascript:filter()">Filter</span></a></li>
-            	<li><a href="#"><span onclick="javascript:dwnSmp()">Downsample Data</span></a></li>
-            	<li><a href="#"><span onclick="javascript:chSlt()">Channel Selection</span></a></li>
+            	<li><a href="#"><span onclick="filter()">Filter</span></a></li>
+            	<li><a href="#"><span onclick="dwnSmp()">Downsample Data</span></a></li>
+            	<li><a href="#"><span onclick="chSlt()">Channel Selection</span></a></li>
             	<!-- <li><a href="#"><span onclick="javascript:mtgDf()">Default Montage</span></a></li> -->
             	<!-- <li><a href="#"><span onclick="javascript:mtgSlt()">Custom Montage</span></a></li> -->
             </ul>
