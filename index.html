@@ -72,8 +72,8 @@ div#menu { margin:1px auto; }
                 <li><a href="#"><span> <input type="file" id="macSelector" name="file" style="display: none;">
                 <span style="color: rgb(169, 169, 169);" onclick="$('#macSelector').click();">Load macro</span></span></a></li>
                 
-  				<li><a href="#"><span onclick="saveEvents()">Save events in csv/txt</span></a></li>
-  				<li><a href="#"><span onclick="saveMac()">Save macro</span></a></li>
+  		<li><a href="#"><span onclick="saveEvents()">Save events in csv/txt</span></a></li>
+  		<li><a href="#"><span onclick="saveMac()">Save macro</span></a></li>
             </ul>
         </li>
         
@@ -121,7 +121,7 @@ div#menu { margin:1px auto; }
     <p><input id="prestim" name="username" value="-200" type="text" autocomplete="off" style="font-size:10pt" size="10"></p>
     <p><span style="font-size:10pt" size="10">Post-stimulus in ms</span></p>
     <p><input id="poststim" name="password" value="500" type="text" autocomplete="off" style="font-size:10pt" size="10"></p>
-    <p><center><button id="avgSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt" onclick="javascript:startAvg()">Ok</button></center></p>
+    <p><center><button id="avgSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt" onclick="startAvg()">Ok</button></center></p>
 </div>
 
 <div id="topoDlg" title="Topography" style="font-size:10pt" size="10">
@@ -136,7 +136,7 @@ div#menu { margin:1px auto; }
 	<br/>
     <p><label for="thres">Threshold: </label> <input type="text" name="thresVal" size="5" value="0.5"></p>
     <br/>
-    <p><center><button id="evtSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="javascript:evtDetect()">Ok</button></center></p>
+    <p><center><button id="evtSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="evtDetect()">Ok</button></center></p>
     <br/>
 </div>
 
@@ -145,7 +145,7 @@ div#menu { margin:1px auto; }
 </select>   
 <br/>
 <br/>
-<p><center><button id="chSubmit" type="button" style="height: 25px; width:100px;font-size:12pt" onclick="javascript:chSub()">Ok</button></center></p>                              
+<p><center><button id="chSubmit" type="button" style="height: 25px; width:100px;font-size:12pt" onclick="chSub()">Ok</button></center></p>                              
 </div>
 
 
@@ -175,7 +175,7 @@ div#menu { margin:1px auto; }
 	<input type="text" name="srate" size="5" readonly=true value='' style="background-color:rgb(211,211,211);">
 	<p>
 	<br/>
-	<center><button id="fltSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="javascript:fltStart()">Ok</button></center></p>
+	<center><button id="fltSubmit" type="button" style="height: 25px; width: 100px;font-size:12pt;top:50px" onclick="fltStart()">Ok</button></center></p>
 	
 	</form>
 	<br/>
